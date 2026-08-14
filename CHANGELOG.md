@@ -5,6 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Dates are Asia/S
 
 ## [Unreleased]
 
+### Added — Sprint 4: AI provider abstraction + rename/summary
+- AIService protocol (rename/summarize) + AIError
+- RuleBasedAIService (offline fallback; default ON — privacy-safe heuristic rename)
+- FoundationModelsAIService (on-device, macOS 26 #available gate)
+- HTTPAIService (OpenAI-compatible chat completions; injectable HTTPClient for tests)
+- OllamaAIService + AIServiceFactory (selection: off/unavailable/no-key → rule fallback)
+- SecretStore (Keychain + in-memory), AIProviderConfig (opt-in)
+- IntakePipeline: optional AI rename after OCR (best-effort, opt-in)
+- App wired to RuleBasedAIService by default; 22 new tests; 78/78 pass, 85.9% coverage
+- EVAL PASS: dropped image display_name auto-renamed to OCR-derived "Supabase auth error 401"
+
 ### Added — Sprint 3: storage + OCR + text search
 - SQLiteShelfRepository (system libsqlite3 + FTS5, WAL, schema_meta v1) behind ShelfItemRepository
 - VisionOCRService (Vision VNRecognizeTextRequest, accurate, en/ko/ja, top→bottom)

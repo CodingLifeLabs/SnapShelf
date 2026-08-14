@@ -31,7 +31,14 @@ final class SnapShelfAppDelegate: NSObject, NSApplicationDelegate {
         } else {
             repository = FileShelfRepository(storeFile: paths.storeFile)
         }
-        let pipeline = DefaultIntakePipeline(repository: repository, ocrService: VisionOCRService())
+        let pipeline = DefaultIntakePipeline(
+            repository: repository,
+            ocrService: VisionOCRService(),
+            // Rule-based rename is local & privacy-safe, so it's on by default.
+            // Cloud/on-device LLM providers are opt-in via AIServiceFactory + settings.
+            aiService: RuleBasedAIService(),
+            renameEnabled: true
+        )
         let model = ShelfModel(paths: paths, repository: repository, pipeline: pipeline)
         self.model = model
 

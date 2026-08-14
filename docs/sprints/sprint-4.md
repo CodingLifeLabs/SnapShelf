@@ -29,3 +29,18 @@
 
 ## 의존 Sprint
 이전: Sprint 3 (OCR 텍스트가 AI 입력)
+
+## GENERATOR 자가 검증 결과
+실행 일시: 2026-08-14
+
+| Gate | 항목 | 결과 | 비고 |
+|------|------|------|------|
+| 1 | 레이어 의존성 | ✅ PASS | 위반 0건 (파일 25) |
+| 2 | 빌드/컴파일 | ✅ PASS | 오류 0건 (FoundationModels canImport+#available 게이트) |
+| 3 | SwiftLint(--strict) | ✅ PASS | error 0건 (111파일) |
+| 4 | 테스트 커버리지 | ✅ PASS | 78/78 통과, 전체 85.9% (Config 92 · Repo 92 · Runtime 89 · Service 74 · Types 95) |
+| 5 | 빌드 성공 | ✅ PASS | 경고 0건 |
+
+> Service 74%: Keychain 실접근·FoundationModels(macOS26) 본문 등 테스트 불가 영역.
+> 목 기반(HTTP transport)/RuleBased/Factory/SecretStore(IntMemory)/IntakePipeline AI 경로는 검증됨.
+

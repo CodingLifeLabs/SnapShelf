@@ -4,13 +4,13 @@
 
 ## 현재 등급
 
-- **상태**: 🟢 Sprint 3 완료 (EVAL PASS) / Sprint 4 대기
-- **커버리지**: 91.6% line (목표 ≥80% ✅) — Config 91 · Repo 92 · Runtime 89 · Service 95 · Types 95
+- **상태**: 🟢 Sprint 4 완료 (EVAL PASS) / Sprint 5 대기
+- **커버리지**: 85.9% line (목표 ≥80% ✅) — Config 92 · Repo 92 · Runtime 89 · Service 74 · Types 95
 - **레이어 위반**: 0건 (Gate 1)
 - **빌드**: 성공 (경고 0)
-- **테스트**: 56/56 통과
-- **저장소**: SQLite + FTS5 (시스템 libsqlite3), JSON 폴백 유지
-- **비고**: 검색 UI 타이핑 시각 검증은 대화형 환경 보완 예정; OCR+FTS5는 실제로 검증됨
+- **테스트**: 78/78 통과
+- **AI**: provider 추상화(4 구현체+팩토리); rule-based rename 기본 ON, 클라우드/온디바이스 옵트인
+- **비고**: Service 74% — Keychain 실접근·FoundationModels(macOS26) 본문 미측정(정상). LLM 실검증은 키/서버 환경 필요
 
 ## 5개 게이트 (네이티브 Swift 적응)
 

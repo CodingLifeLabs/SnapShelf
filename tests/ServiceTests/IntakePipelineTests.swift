@@ -121,6 +121,53 @@ final class DefaultIntakePipelineTests: XCTestCase {
         func recognize(_ url: URL) async throws -> String { text }
     }
 
+    private actor FakeAI: AIService {
+        private let name: String
+        init(_ name: String) { self.name = name }
+        func rename(_ item: ShelfItem) async throws -> String { name }
+        func summarize(_ text: String) async throws -> String { "summary" }
+    }
+
+    func test_ingest_withAIRename_updatesDisplayName() async throws {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("snapshelf-intake-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let store = dir.appendingPathComponent("index.json", isDirectory: false)
+        let repo = FileShelfRepository(storeFile: store)
+        let pipeline = DefaultIntakePipeline(
+            repository: repo,
+            aiService: FakeAI("Supabase Login Error"),
+            renameEnabled: true,
+            clock: { Date(timeIntervalSince1970: 1) }
+        )
+
+        let item = try await pipeline.ingest(url: URL(fileURLWithPath: "/tmp/Screenshot 2026-08-14.png"))
+
+        XCTAssertEqual(item.displayName, "Supabase Login Error")
+        let loaded = try await repo.load()
+        XCTAssertEqual(loaded.first?.displayName, "Supabase Login Error")
+    }
+
+    func test_ingest_renameDisabled_keepsBeautifiedName() async throws {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("snapshelf-intake-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let store = dir.appendingPathComponent("index.json", isDirectory: false)
+        let repo = FileShelfRepository(storeFile: store)
+        let pipeline = DefaultIntakePipeline(
+            repository: repo,
+            aiService: FakeAI("Ignored Name"),
+            renameEnabled: false,
+            clock: { Date(timeIntervalSince1970: 1) }
+        )
+
+        let item = try await pipeline.ingest(url: URL(fileURLWithPath: "/tmp/Screenshot 2026-08-14 at 10.22.03.png"))
+
+        XCTAssertEqual(item.displayName, "Screenshot 2026-08-14.png")
+    }
+
     func test_ingest_withOCR_indexesTextForSearch() async throws {
         // Arrange: real FileShelfRepository + fake OCR service
         let dir = FileManager.default.temporaryDirectory

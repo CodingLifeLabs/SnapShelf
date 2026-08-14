@@ -32,21 +32,27 @@ public enum IntakeSupport {
 public final class DefaultIntakePipeline: IntakePipeline {
     private let repository: any ShelfItemRepository
     private let ocrService: OCRService?
+    private let aiService: AIService?
+    private let renameEnabled: Bool
     private let clock: @Sendable () -> Date
 
     public init(
         repository: any ShelfItemRepository,
         ocrService: OCRService? = nil,
+        aiService: AIService? = nil,
+        renameEnabled: Bool = false,
         clock: @escaping @Sendable () -> Date = { Date() }
     ) {
         self.repository = repository
         self.ocrService = ocrService
+        self.aiService = aiService
+        self.renameEnabled = renameEnabled
         self.clock = clock
     }
 
     public func ingest(url: URL) async throws -> ShelfItem {
         let original = url.lastPathComponent
-        let item = ShelfItem(
+        var item = ShelfItem(
             sourceURL: url,
             displayName: IntakeSupport.beautify(original),
             originalName: original,
@@ -57,6 +63,12 @@ public final class DefaultIntakePipeline: IntakePipeline {
         // OCR is best-effort: a failure must never lose the captured item.
         if let ocr = ocrService, let text = try? await ocr.recognize(url), !text.isEmpty {
             try await repository.setOCR(id: item.id, text: text)
+            item.ocrText = text
+        }
+        // AI rename is best-effort and opt-in; falls through silently on failure.
+        if renameEnabled, let ai = aiService, let name = try? await ai.rename(item), !name.isEmpty {
+            item.displayName = name
+            try await repository.upsert(item)
         }
         return item
     }
