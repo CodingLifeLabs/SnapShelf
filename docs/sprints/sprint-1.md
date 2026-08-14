@@ -56,3 +56,19 @@
 - ⌘⇧4 시스템 연계는 폴더 감시로 처리(직접 키 후킹 아님). EVAL 편의용 "Simulate Capture" 액션 병행.
 - 권한(TCC): 감시 폴더 접근. EVAL 시뮬레이션은 앱 제어 폴더(임시) 사용으로 권한 마찰 회피.
 - 본 Sprint 의 저장은 파일+JSON(Sprint 3 에서 SQLite+FTS5 로 교체).
+- AppKit↔SwiftUI 브리지(ShelfPanelController/StatusBarController)는 App(UI) 타깃에 배치
+  (커버리지는 5개 프레임워크 모듈만 측정; UI 글루는 EVAL/XCUITest 로 검증).
+
+## GENERATOR 자가 검증 결과
+실행 일시: 2026-08-14
+
+| Gate | 항목 | 결과 | 비고 |
+|------|------|------|------|
+| 1 | 레이어 의존성 | ✅ PASS | 위반 0건 (검사 파일 14) |
+| 2 | 빌드/컴파일 | ✅ PASS | 오류 0건, Any/강제언래핑 없음 |
+| 3 | SwiftLint(--strict) | ✅ PASS | error 0건 (60파일) |
+| 4 | 테스트 커버리지 | ✅ PASS | 35/35 통과, 전체 94.4% (Config 90 · Repo 98 · Runtime 93 · Service 97 · Types 100) |
+| 5 | 빌드 성공 | ✅ PASS | 경고 0건 |
+
+→ 5개 Gate 전부 PASS. EVALUATOR 검증 요청.
+
