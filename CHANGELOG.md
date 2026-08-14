@@ -34,6 +34,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Dates are Asia/S
 - App wired to RuleBasedAIService by default; 22 new tests; 78/78 pass, 85.9% coverage
 - EVAL PASS: dropped image display_name auto-renamed to OCR-derived "Supabase auth error 401"
 
+### Added — Sprint 7: cleanup, dedup, notes, clipboard history
+- AutoCleanup + CleanupModel: 30일 경과 임시 항목 → NSWorkspace.recycle 이동 (실행취소 지원)
+- PerceptualHash(pHash) + Deduplicator + DuplicatesModel/View: 유사 그룹 → 보관본 추천 → 승인
+- ClipboardHistoryRepository + ClipboardHistoryModel/View: pasteboard 이미지 폴링 캡처(1s), 512px 다운스케일, 로컬 JSON 저장
+- NotesView: 항목별 메모 (shelf_items.note 컬럼)
+- 28 new unit tests; 146/146 pass, 87.0% coverage
+- EVAL PASS: app runs, core loop intact; lifecycle logic verified via XCTest (UI clicks deferred per TCC)
+
 ### Added — Sprint 3: storage + OCR + text search
 - SQLiteShelfRepository (system libsqlite3 + FTS5, WAL, schema_meta v1) behind ShelfItemRepository
 - VisionOCRService (Vision VNRecognizeTextRequest, accurate, en/ko/ja, top→bottom)
