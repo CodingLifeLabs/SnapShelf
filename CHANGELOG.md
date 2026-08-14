@@ -5,6 +5,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Dates are Asia/S
 
 ## [Unreleased]
 
+### Added — Sprint 1: Foundation (capture→shelf core loop)
+- 6 static-framework layer modules build clean (Types/Config/Repo/Service/Runtime) + app
+- Menu bar accessory (LSUIElement) with status item (Open Shelf / Simulate Capture / Quit)
+- DirectoryWatcher (dispatch source) → IntakePipeline → FileShelfRepository (JSON)
+- @Observable ShelfModel; floating non-activating NSPanel shelf surface (bottom-right)
+- ShelfView/ItemView with enter animations + reduce-motion support
+- 35 XCTest cases; **94.4% line coverage** (Config 90 · Repo 98 · Runtime 93 · Service 97 · Types 100)
+- EVAL PASS: live inbox-drop auto-indexed; menu bar + shelf panel on screen verified
+- Fix: NSPanel hidesOnDeactivate=false so the shelf persists when app deactivates
+
 ### Added — Bootstrap (Phase 0)
 - XcodeGen `Project.yml` with 6 static-framework layer modules + app + unified test bundle
 - `.swiftlint.yml` (Gate 3), `.harness/linters/dependency-direction.js` (Gate 1, Swift-aware)

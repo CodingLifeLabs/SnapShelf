@@ -27,6 +27,7 @@ public final class ShelfPanelController: NSObject {
         panel.backgroundColor = .clear
         panel.hasShadow = true
         panel.isReleasedWhenClosed = false
+        panel.hidesOnDeactivate = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.setContentSize(panelSize)
     }
@@ -36,6 +37,7 @@ public final class ShelfPanelController: NSObject {
             panel.orderFrontRegardless()
             return
         }
+        NSApp.activate()
         let visible = screen.visibleFrame
         panel.setContentSize(panelSize)
         let origin = NSPoint(
