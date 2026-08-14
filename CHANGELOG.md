@@ -42,6 +42,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Dates are Asia/S
 - 28 new unit tests; 146/146 pass, 87.0% coverage
 - EVAL PASS: app runs, core loop intact; lifecycle logic verified via XCTest (UI clicks deferred per TCC)
 
+### Added — Sprint 8: settings, privacy, URL detection, Dev Mode
+- AppSettings + AppSettingsStore: 전체 설정 UserDefaults 단일 키 JSON 스냅샷
+- SettingsWindow 6탭 (General / Capture & Folders / OCR & Search / AI / Privacy / Advanced) + 메뉴바 진입점
+- BrowserURLDetector: Safari/Chrome/Firefox/Arc 탭 URL (AppleScript, 옵트인, 테스트 주입 가능)
+- DevModeService: OCR 텍스트 → 코드/에러/파일 참조 추출 → SO/GH 검색 URL / Claude URL (완전 오프라인)
+- RecordingOrganizer: 녹화 파일(.mov/.mp4/.m4v) 월 버킷 정리
+- PrivacyLog: 아웃바운드 전송 이력 JSONL (500건 캡)
+- 초기화 2단계 확인 UI (idle → confirmWipe)
+- 31 new unit tests; 177/177 pass, 87.5% coverage
+- EVAL PASS: settings window opens via menu, prefs round-trip verified; extraction logic via XCTest
+
 ### Added — Sprint 3: storage + OCR + text search
 - SQLiteShelfRepository (system libsqlite3 + FTS5, WAL, schema_meta v1) behind ShelfItemRepository
 - VisionOCRService (Vision VNRecognizeTextRequest, accurate, en/ko/ja, top→bottom)
