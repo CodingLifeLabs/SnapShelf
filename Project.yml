@@ -1,0 +1,158 @@
+# XcodeGen project spec for SnapShelf
+# Layer modules are STATIC frameworks so the compiler/linker itself enforces the
+# dependency direction (Types -> Config -> Repo -> Service -> Runtime -> UI).
+# A reverse `import` across modules is a hard compile error — this is the
+# mechanical enforcement promised by docs/architecture.md.
+#
+# Regenerate after edits:  npm run gen:project   (or: xcodegen generate)
+
+name: SnapShelf
+options:
+  bundleIdPrefix: app.snapshelf
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+  groupSortPosition: top
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: minimal
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: NO
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_IDENTITY: "-"
+    CODE_SIGNING_REQUIRED: NO
+    CODE_SIGNING_ALLOWED: NO
+    ENABLE_HARDENED_RUNTIME: YES
+    ALWAYS_SEARCH_USER_PATHS: NO
+    CLANG_ENABLE_MODULES: YES
+
+# Reusable static-framework settings for every layer module.
+layer_framework_settings:
+  MACH_O_TYPE: staticlib
+  DEFINES_MODULE: YES
+  SKIP_INSTALL: YES
+  BUILD_LIBRARY_FOR_DISTRIBUTION: NO
+
+targets:
+  # ---- Layer 1: Types (pure domain models — no SnapShelf imports) ----
+  SnapShelfTypes:
+    type: framework
+    platform: macOS
+    sources: [src/Types]
+    settings:
+      base:
+        MACH_O_TYPE: staticlib
+        DEFINES_MODULE: YES
+
+  # ---- Layer 2: Config ----
+  SnapShelfConfig:
+    type: framework
+    platform: macOS
+    sources: [src/Config]
+    dependencies:
+      - target: SnapShelfTypes
+    settings:
+      base:
+        MACH_O_TYPE: staticlib
+        DEFINES_MODULE: YES
+
+  # ---- Layer 3: Repo (persistence / data access) ----
+  SnapShelfRepo:
+    type: framework
+    platform: macOS
+    sources: [src/Repo]
+    dependencies:
+      - target: SnapShelfTypes
+      - target: SnapShelfConfig
+    settings:
+      base:
+        MACH_O_TYPE: staticlib
+        DEFINES_MODULE: YES
+
+  # ---- Layer 4: Service (business logic: OCR, AI, classification, naming) ----
+  SnapShelfService:
+    type: framework
+    platform: macOS
+    sources: [src/Service]
+    dependencies:
+      - target: SnapShelfTypes
+      - target: SnapShelfConfig
+      - target: SnapShelfRepo
+    settings:
+      base:
+        MACH_O_TYPE: staticlib
+        DEFINES_MODULE: YES
+
+  # ---- Layer 5: Runtime (app lifecycle, menu bar, panels, watchers, permissions) ----
+  SnapShelfRuntime:
+    type: framework
+    platform: macOS
+    sources: [src/Runtime]
+    dependencies:
+      - target: SnapShelfTypes
+      - target: SnapShelfConfig
+      - target: SnapShelfRepo
+      - target: SnapShelfService
+    settings:
+      base:
+        MACH_O_TYPE: staticlib
+        DEFINES_MODULE: YES
+
+  # ---- Layer 6: App / UI ----
+  SnapShelf:
+    type: application
+    platform: macOS
+    sources: [App/Sources]
+    resources: [App/Resources]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.snapshelf.SnapShelf
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        INFOPLIST_FILE: App/Info.plist
+        PRODUCT_NAME: SnapShelf
+        ENABLE_PREVIEWS: YES
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+    dependencies:
+      - target: SnapShelfTypes
+      - target: SnapShelfConfig
+      - target: SnapShelfRepo
+      - target: SnapShelfService
+      - target: SnapShelfRuntime
+
+  # ---- Combined unit-test bundle (one `xcodebuild test` run, per-module coverage) ----
+  SnapShelfTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources: [tests]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.snapshelf.SnapShelfTests
+    dependencies:
+      - target: SnapShelfTypes
+      - target: SnapShelfConfig
+      - target: SnapShelfRepo
+      - target: SnapShelfService
+      - target: SnapShelfRuntime
+
+schemes:
+  SnapShelf:
+    build:
+      targets:
+        SnapShelf: all
+        SnapShelfTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - SnapShelfTests
+      gatherCoverageData: true
+      coverageTargets:
+        - SnapShelfTypes
+        - SnapShelfConfig
+        - SnapShelfRepo
+        - SnapShelfService
+        - SnapShelfRuntime

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>$(DEVELOPMENT_LANGUAGE)</string>
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
+    <key>CFBundleIdentifier</key>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <key>CFBundleName</key>
+    <string>$(PRODUCT_NAME)</string>
+    <key>CFBundleDisplayName</key>
+    <string>SnapShelf</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>$(MARKETING_VERSION)</string>
+    <key>CFBundleVersion</key>
+    <string>$(CURRENT_PROJECT_VERSION)</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>$(MACOSX_DEPLOYMENT_TARGET)</string>
+
+    <!-- Accessory (menu bar) app: no Dock icon, no main menu bar.
+         The Shelf surface is an NSPanel shown on demand. -->
+    <key>LSUIElement</key>
+    <true/>
+
+    <!-- Privacy usage strings (shown by macOS TCC consent prompts) -->
+    <key>NSDesktopFolderUsageDescription</key>
+    <string>SnapShelf watches your Desktop for new screenshots so it can shelve, organize, and make them searchable.</string>
+    <key>NSPicturesFolderUsageDescription</key>
+    <string>SnapShelf watches your Pictures/Screenshots folder for new screenshots so it can shelve, organize, and make them searchable.</string>
+    <key>NSDownloadsFolderUsageDescription</key>
+    <string>SnapShelf can shelve and organize images you download.</string>
+    <key>NSScreenCaptureUsageDescription</key>
+    <string>SnapShelf can capture the screen to let you shelve a region or window on demand.</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>SnapShelf can open other apps (e.g. browsers, editors) from a captured screenshot's detected source.</string>
+</dict>
+</plist>

@@ -1,0 +1,11 @@
+{
+  "name": "snapshelf-harness",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Harness scripts for SnapShelf (linters, gates). The product itself is a native Swift/SwiftUI macOS app.",
+  "scripts": {
+    "harness:lint": "node .harness/linters/dependency-direction.js src/ App/Sources",
+    "gen:project": "xcodegen generate",
+    "gen:clean": "rm -rf SnapShelf.xcodeproj && xcodegen generate"
+  }
+}

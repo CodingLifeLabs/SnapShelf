@@ -1,0 +1,59 @@
+# SwiftLint configuration for SnapShelf
+# Gate 3: code quality / security patterns
+
+opt_in_rules:
+  - empty_count
+  - empty_string
+  - first_where
+  - last_where
+  - operator_usage_whitespace
+  - sorted_first_last
+  - toggle_bool
+  - yoda_condition
+
+disabled_rules:
+  - trailing_whitespace
+  - todo  # tracked in ROADMAP / TASKS instead
+
+included:
+  - src
+  - App/Sources
+  - tests
+
+excluded:
+  - DerivedData
+  - build
+  - .build
+
+line_length:
+  warning: 140
+  error: 200
+
+type_body_length:
+  warning: 400
+  error: 800
+
+file_length:
+  warning: 600
+  error: 1000
+
+function_body_length:
+  warning: 60
+  error: 120
+
+cyclomatic_complexity:
+  warning: 12
+  error: 18
+
+identifier_name:
+  min_length: 1
+  max_length: 60
+  allowed_symbols: ["_"]
+
+# Strict: never silently force-unwrap or force-cast in product code
+force_try:
+  severity: error
+force_unwrapping:
+  severity: error
+force_cast:
+  severity: error
