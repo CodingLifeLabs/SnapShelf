@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Dates are Asia/S
 
 ## [Unreleased]
 
+### Added — Sprint 2: Shelf interactions
+- Hover toolbar per item: copy image, share (ShareLink), pin/unpin, stow
+- Drag-anywhere via .onDrag (NSItemProvider file URL) -> Finder/Slack/Discord/ChatGPT/...
+- Pinned + Recent sections; history-limit enforcement (pinned always kept, newest non-pinned)
+- Auto-stow policy + scheduler (hoverSeconds); cancelled on pin/stow
+- ClipboardService (file/image to pasteboard, injectable pasteboard for tests)
+- 7 new unit tests (sections, limit, auto-stow policy, clipboard); 42/42 pass, 95.0% coverage
+- EVAL PASS: app runs, core loop intact; UI clicks/screenshot deferred to interactive env (shell TCC)
+
 ### Added — Sprint 1: Foundation (capture→shelf core loop)
 - 6 static-framework layer modules build clean (Types/Config/Repo/Service/Runtime) + app
 - Menu bar accessory (LSUIElement) with status item (Open Shelf / Simulate Capture / Quit)

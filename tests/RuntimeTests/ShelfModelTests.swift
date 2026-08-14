@@ -39,7 +39,7 @@ final class ShelfModelTests: XCTestCase {
         let dir: URL
     }
 
-    private func makeEnv() throws -> ModelEnv {
+    private func makeEnv(settings: ShelfSettings = .default) throws -> ModelEnv {
         let dir = FileManager.default.temporaryDirectory
             .appendingPathComponent("snapshelf-model-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
@@ -52,8 +52,59 @@ final class ShelfModelTests: XCTestCase {
         try paths.ensureExists()
         let repo = FakeRepo()
         let pipeline = FakePipeline()
-        let model = ShelfModel(paths: paths, repository: repo, pipeline: pipeline)
+        let model = ShelfModel(paths: paths, settings: settings, repository: repo, pipeline: pipeline)
         return ModelEnv(model: model, repo: repo, pipeline: pipeline, dir: dir)
+    }
+
+    // MARK: - sections
+
+    func test_pinnedAndRecent_splitByStatus() async throws {
+        let env = try makeEnv()
+        defer { try? FileManager.default.removeItem(at: env.dir) }
+        await env.model.ingest(url: URL(fileURLWithPath: "/x/a.png"))
+        await env.model.ingest(url: URL(fileURLWithPath: "/x/b.png"))
+        let firstId = env.model.surfaced.first!.id
+        env.model.togglePin(id: firstId)
+
+        XCTAssertEqual(env.model.pinned.count, 1)
+        XCTAssertEqual(env.model.recent.count, 1)
+        XCTAssertEqual(env.model.pinned.first?.id, firstId)
+    }
+
+    // MARK: - history limit
+
+    func test_enforceHistoryLimit_keepsNewestAndPin() async throws {
+        let settings = ShelfSettings(hoverSeconds: 999, historyLimit: 3, autoStow: false)
+        let env = try makeEnv(settings: settings)
+        defer { try? FileManager.default.removeItem(at: env.dir) }
+
+        for i in 0..<6 {
+            await env.model.ingest(url: URL(fileURLWithPath: "/x/s\(i).png"))
+        }
+        // ingest already trims to the limit -> only newest 3 remain
+        XCTAssertEqual(env.model.surfaced.count, 3)
+        XCTAssertEqual(Set(env.model.surfaced.map(\.displayName)), ["s5.png", "s4.png", "s3.png"])
+
+        // pin the oldest remaining; re-enforcing keeps it while preserving newest order
+        let pinId = env.model.surfaced.first(where: { $0.displayName == "s3.png" })!.id
+        env.model.togglePin(id: pinId)
+        env.model.enforceHistoryLimit()
+
+        XCTAssertTrue(env.model.pinned.contains(where: { $0.id == pinId }))
+        XCTAssertEqual(env.model.surfaced.first?.displayName, "s5.png")
+    }
+
+    // MARK: - auto-stow policy
+
+    func test_shouldAutoStow_policy() {
+        let on = ShelfSettings(hoverSeconds: 1, historyLimit: 10, autoStow: true)
+        let off = ShelfSettings(hoverSeconds: 1, historyLimit: 10, autoStow: false)
+        let resting = ShelfItem(sourceURL: URL(fileURLWithPath: "/x/a.png"), displayName: "a", status: .resting)
+        let pinned = ShelfItem(sourceURL: URL(fileURLWithPath: "/x/a.png"), displayName: "a", status: .pinned)
+
+        XCTAssertTrue(ShelfModel.shouldAutoStow(resting, settings: on))
+        XCTAssertFalse(ShelfModel.shouldAutoStow(resting, settings: off))
+        XCTAssertFalse(ShelfModel.shouldAutoStow(pinned, settings: on))
     }
 
     // MARK: - load

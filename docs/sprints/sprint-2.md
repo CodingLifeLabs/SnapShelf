@@ -31,3 +31,15 @@
 
 ## 의존 Sprint
 이전: Sprint 1
+
+## GENERATOR 자가 검증 결과
+실행 일시: 2026-08-14
+
+| Gate | 항목 | 결과 | 비고 |
+|------|------|------|------|
+| 1 | 레이어 의존성 | ✅ PASS | 위반 0건 (파일 15) |
+| 2 | 빌드/컴파일 | ✅ PASS | 오류 0건 |
+| 3 | SwiftLint(--strict) | ✅ PASS | error 0건 (66파일) |
+| 4 | 테스트 커버리지 | ✅ PASS | 42/42 통과, 전체 95.0% (Config 90 · Repo 98 · Runtime 94 · Service 97 · Types 100) |
+| 5 | 빌드 성공 | ✅ PASS | 경고 0건 |
+

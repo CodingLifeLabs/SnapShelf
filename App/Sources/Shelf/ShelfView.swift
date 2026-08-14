@@ -1,10 +1,12 @@
 import SwiftUI
 import SnapShelfRuntime
+import SnapShelfService
 import SnapShelfTypes
 
 struct ShelfView: View {
     let model: ShelfModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var clipboard = ClipboardService()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -40,19 +42,42 @@ struct ShelfView: View {
     }
 
     @ViewBuilder private var content: some View {
-        if model.visibleItems.isEmpty {
+        if model.pinned.isEmpty, model.recent.isEmpty {
             emptyState
         } else {
             ScrollView {
-                LazyVStack(spacing: 10) {
-                    ForEach(model.visibleItems) { item in
-                        ShelfItemView(item: item, reduceMotion: reduceMotion)
-                            .transition(itemTransition)
+                LazyVStack(alignment: .leading, spacing: 14) {
+                    if !model.pinned.isEmpty {
+                        section(title: "Pinned", items: model.pinned)
+                    }
+                    if !model.recent.isEmpty || model.pinned.isEmpty {
+                        section(title: model.pinned.isEmpty ? "Recent" : "Recent",
+                                items: model.recent)
                     }
                 }
                 .padding(12)
             }
-            .animation(reduceMotion ? nil : spring, value: model.visibleItems.map(\.id))
+            .animation(reduceMotion ? nil : spring, value: sectionKey)
+        }
+    }
+
+    @ViewBuilder
+    private func section(title: String, items: [ShelfItem]) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 4)
+            ForEach(items) { item in
+                ShelfItemView(
+                    item: item,
+                    reduceMotion: reduceMotion,
+                    onPin: { model.togglePin(id: item.id) },
+                    onStow: { model.stow(id: item.id) },
+                    onCopyImage: { clipboard.copyImage(at: item.sourceURL) }
+                )
+                .transition(itemTransition)
+            }
         }
     }
 
@@ -75,6 +100,10 @@ struct ShelfView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(20)
+    }
+
+    private var sectionKey: [UUID] {
+        model.pinned.map(\.id) + model.recent.map(\.id)
     }
 
     private var spring: Animation { .spring(response: 0.4, dampingFraction: 0.82) }

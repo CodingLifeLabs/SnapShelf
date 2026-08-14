@@ -19,6 +19,7 @@ public final class ShelfModel {
     private let repository: any ShelfItemRepository
     private let pipeline: any IntakePipeline
     private var watcher: (any ScreenshotWatcher)?
+    private var stowWork: [UUID: Task<Void, Never>] = [:]
 
     public init(
         paths: AppPaths,
@@ -48,6 +49,7 @@ public final class ShelfModel {
     public func load() async {
         do {
             surfaced = try await repository.recent(settings.historyLimit)
+            enforceHistoryLimit()
         } catch {
             statusMessage = "Load failed: \(error)"
         }
@@ -60,6 +62,8 @@ public final class ShelfModel {
         do {
             let item = try await pipeline.ingest(url: url)
             surfaced.insert(item, at: 0)
+            enforceHistoryLimit()
+            scheduleAutoStow(for: item.id)
         } catch {
             statusMessage = "Ingest failed: \(error)"
         }
@@ -85,10 +89,13 @@ public final class ShelfModel {
         var item = surfaced[index]
         item.status = item.status == .pinned ? .resting : .pinned
         surfaced[index] = item
+        if item.status == .pinned { stowWork[id]?.cancel(); stowWork[id] = nil }
         Task { try? await repository.upsert(item) }
     }
 
     public func stow(id: UUID) {
+        stowWork[id]?.cancel()
+        stowWork[id] = nil
         guard let index = surfaced.firstIndex(where: { $0.id == id }) else { return }
         var item = surfaced[index]
         item.status = .stowed
@@ -98,6 +105,52 @@ public final class ShelfModel {
 
     public var visibleItems: [ShelfItem] {
         surfaced.filter { $0.isSurfaced }
+    }
+
+    /// Always-on-shelf items shown in a dedicated top section.
+    public var pinned: [ShelfItem] {
+        surfaced.filter { $0.status == .pinned }
+    }
+
+    /// Freshly captured, not pinned — the scrolling section.
+    public var recent: [ShelfItem] {
+        surfaced.filter { $0.status == .resting }
+    }
+
+    /// Pure policy: should a resting item auto-stow after the hover window?
+    public static func shouldAutoStow(_ item: ShelfItem, settings: ShelfSettings) -> Bool {
+        settings.autoStow && item.status == .resting
+    }
+
+    /// Schedule auto-stow for a resting item (cancels any prior schedule for it).
+    public func scheduleAutoStow(for id: UUID) {
+        guard let item = surfaced.first(where: { $0.id == id }),
+              Self.shouldAutoStow(item, settings: settings) else { return }
+        stowWork[id]?.cancel()
+        let seconds = settings.hoverSeconds
+        stowWork[id] = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+            guard !Task.isCancelled else { return }
+            self?.stow(id: id)
+        }
+    }
+
+    /// Keep pinned items always; trim oldest non-pinned beyond `historyLimit`.
+    public func enforceHistoryLimit() {
+        let limit = settings.historyLimit
+        guard surfaced.count > limit else { return }
+        let nonPinnedBudget = max(0, limit - surfaced.filter { $0.status == .pinned }.count)
+        var kept: [ShelfItem] = []
+        var nonPinnedKept = 0
+        for item in surfaced { // surfaced is newest-first
+            if item.status == .pinned {
+                kept.append(item)
+            } else if nonPinnedKept < nonPinnedBudget {
+                kept.append(item)
+                nonPinnedKept += 1
+            }
+        }
+        surfaced = kept
     }
 
     // MARK: - Internals

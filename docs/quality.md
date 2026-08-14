@@ -4,11 +4,12 @@
 
 ## 현재 등급
 
-- **상태**: 🟢 Sprint 1 완료 (EVAL PASS) / Sprint 2 대기
-- **커버리지**: 94.4% line (목표 ≥80% ✅) — Config 90 · Repo 98 · Runtime 93 · Service 97 · Types 100
+- **상태**: 🟢 Sprint 2 완료 (EVAL PASS) / Sprint 3 대기
+- **커버리지**: 95.0% line (목표 ≥80% ✅) — Config 90 · Repo 98 · Runtime 94 · Service 97 · Types 100
 - **레이어 위반**: 0건 (Gate 1)
 - **빌드**: 성공 (경고 0)
-- **테스트**: 35/35 통과
+- **테스트**: 42/42 통과
+- **비고**: Sprint 2 UI 인터랙션(드래그/공유/호버) 시각 검증은 대화형 환경 보완 예정
 
 ## 5개 게이트 (네이티브 Swift 적응)
 
