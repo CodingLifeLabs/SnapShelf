@@ -22,6 +22,7 @@ final class SnapShelfAppDelegate: NSObject, NSApplicationDelegate {
     private var panelController: ShelfPanelController?
     private var statusBarController: StatusBarController?
     private var libraryController: LibraryWindowController?
+    private var settingsController: SettingsWindowController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let paths = AppPaths.current()
@@ -65,9 +66,14 @@ final class SnapShelfAppDelegate: NSObject, NSApplicationDelegate {
         )
         self.libraryController = libraryController
 
+        let settingsModel = SettingsModel(store: AppSettingsStore(), paths: paths)
+        let settingsController = SettingsWindowController(model: settingsModel)
+        self.settingsController = settingsController
+
         statusBarController = StatusBarController(
             onOpenShelf: { [weak panel] in panel?.show() },
             onOpenLibrary: { [weak libraryController] in libraryController?.show() },
+            onOpenSettings: { [weak settingsController] in settingsController?.show() },
             onSimulateCapture: { [weak model] in _ = model?.simulateCapture() },
             onQuit: { NSApp.terminate(nil) }
         )

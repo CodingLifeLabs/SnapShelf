@@ -68,7 +68,9 @@ final class ShelfModelTests: XCTestCase {
             libraryDirectory: dir.appendingPathComponent("Library", isDirectory: true),
             storeFile: dir.appendingPathComponent("index.json", isDirectory: false),
             databaseFile: dir.appendingPathComponent("index.sqlite", isDirectory: false),
-            clipboardHistoryFile: dir.appendingPathComponent("clipboard-history.json", isDirectory: false)
+            clipboardHistoryFile: dir.appendingPathComponent("clipboard-history.json", isDirectory: false),
+            recordingsDirectory: dir.appendingPathComponent("Recordings", isDirectory: true),
+            privacyLogFile: dir.appendingPathComponent("privacy-log.jsonl", isDirectory: false)
         )
         try paths.ensureExists()
         let repo = FakeRepo()

@@ -17,6 +17,8 @@ final class AppPathsTests: XCTestCase {
         XCTAssertEqual(paths.storeFile.path, "/Users/test/Library/Application Support/SnapShelf/index.json")
         XCTAssertEqual(paths.databaseFile.path, "/Users/test/Library/Application Support/SnapShelf/index.sqlite")
         XCTAssertEqual(paths.clipboardHistoryFile.path, "/Users/test/Library/Application Support/SnapShelf/clipboard-history.json")
+        XCTAssertEqual(paths.recordingsDirectory.path, "/Users/test/Library/Application Support/SnapShelf/Recordings")
+        XCTAssertEqual(paths.privacyLogFile.path, "/Users/test/Library/Application Support/SnapShelf/privacy-log.jsonl")
     }
 
     func test_make_isConsistentWithExplicitInit() {
@@ -28,7 +30,9 @@ final class AppPathsTests: XCTestCase {
             libraryDirectory: derived.libraryDirectory,
             storeFile: derived.storeFile,
             databaseFile: derived.databaseFile,
-            clipboardHistoryFile: derived.clipboardHistoryFile
+            clipboardHistoryFile: derived.clipboardHistoryFile,
+            recordingsDirectory: derived.recordingsDirectory,
+            privacyLogFile: derived.privacyLogFile
         )
         XCTAssertEqual(derived, explicit)
     }
@@ -45,7 +49,9 @@ final class AppPathsTests: XCTestCase {
             libraryDirectory: tmp.appendingPathComponent("Library", isDirectory: true),
             storeFile: tmp.appendingPathComponent("index.json", isDirectory: false),
             databaseFile: tmp.appendingPathComponent("index.sqlite", isDirectory: false),
-            clipboardHistoryFile: tmp.appendingPathComponent("clipboard-history.json", isDirectory: false)
+            clipboardHistoryFile: tmp.appendingPathComponent("clipboard-history.json", isDirectory: false),
+            recordingsDirectory: tmp.appendingPathComponent("Recordings", isDirectory: true),
+            privacyLogFile: tmp.appendingPathComponent("privacy-log.jsonl", isDirectory: false)
         )
         defer { try? FileManager.default.removeItem(at: tmp) }
 
@@ -67,7 +73,9 @@ final class AppPathsTests: XCTestCase {
             libraryDirectory: tmp.appendingPathComponent("Library", isDirectory: true),
             storeFile: tmp.appendingPathComponent("index.json", isDirectory: false),
             databaseFile: tmp.appendingPathComponent("index.sqlite", isDirectory: false),
-            clipboardHistoryFile: tmp.appendingPathComponent("clipboard-history.json", isDirectory: false)
+            clipboardHistoryFile: tmp.appendingPathComponent("clipboard-history.json", isDirectory: false),
+            recordingsDirectory: tmp.appendingPathComponent("Recordings", isDirectory: true),
+            privacyLogFile: tmp.appendingPathComponent("privacy-log.jsonl", isDirectory: false)
         )
         defer { try? FileManager.default.removeItem(at: tmp) }
 
