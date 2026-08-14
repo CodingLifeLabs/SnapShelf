@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Dates are Asia/S
 
 ## [Unreleased]
 
+### Added — Sprint 6: Library / Timeline / Collections UI
+- TimelineGrouper (day buckets, newest-first) + TimelineBucket (Service)
+- SnapCollection (Types) + CollectionModel (in-memory CRUD) (Runtime)
+- LibraryModel: scans app Library root for Smart Folder subfolders
+- LibraryView (NavigationSplitView sidebar: Timeline/All/Folders/Collections + grid + timeline)
+- LibraryWindowController (NSWindow) + "Open Library" (⌘L) menu item
+- 10 new unit tests; 109/109 pass, 88.2% coverage
+- EVAL: backend logic tested; UI compiled+wired; visual click deferred to interactive env
+
 ### Added — Sprint 5: Smart Folder auto-organize
 - FolderRule + FolderRuleKind (Types); FolderRuleEngine (priority/keyword/regex/category, defaultRules)
 - SourceDetector: TCC-free heuristic app/category detection from OCR + filename

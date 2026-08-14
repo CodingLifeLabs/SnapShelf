@@ -4,13 +4,13 @@
 
 ## 현재 등급
 
-- **상태**: 🟢 Sprint 5 완료 (EVAL PASS) / Sprint 6 대기
-- **커버리지**: 87.2% line (목표 ≥80% ✅) — Config 92 · Repo 92 · Runtime 89 · Service 81 · Types 97
+- **상태**: 🟢 Sprint 6 완료 (EVAL PASS) / Sprint 7 대기
+- **커버리지**: 88.2% line (목표 ≥80% ✅) — Config 92 · Repo 92 · Runtime 91 · Service 82 · Types 97
 - **레이어 위반**: 0건 (Gate 1)
 - **빌드**: 성공 (경고 0)
-- **테스트**: 99/99 통과
-- **Smart Folder**: 앱 Library 내 자동 정리(TCC 안전); 사용자 폴더 연동은 향후
-- **비고**: 핵심 루프(캡처→OCR→AI리네임→자동정리)가 파일 이동까지 실제로 동작 검증됨
+- **테스트**: 109/109 통과
+- **UI**: Library/Timeline/Collections 뷰 + 창(코드 연결); 시각 클릭 검증은 대화형 환경
+- **비고**: 핵심 루프(캡처→OCR→AI리네임→자동정리) 실동작 검증 + 탐색 UI 구현
 
 ## 5개 게이트 (네이티브 Swift 적응)
 
