@@ -24,8 +24,14 @@ final class SnapShelfAppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let paths = AppPaths.current()
-        let repository = FileShelfRepository(storeFile: paths.storeFile)
-        let pipeline = DefaultIntakePipeline(repository: repository)
+        // Prefer SQLite+FTS5; fall back to the JSON store if the DB cannot be opened.
+        let repository: any ShelfItemRepository
+        if let sqlite = try? SQLiteShelfRepository(databaseURL: paths.databaseFile) {
+            repository = sqlite
+        } else {
+            repository = FileShelfRepository(storeFile: paths.storeFile)
+        }
+        let pipeline = DefaultIntakePipeline(repository: repository, ocrService: VisionOCRService())
         let model = ShelfModel(paths: paths, repository: repository, pipeline: pipeline)
         self.model = model
 

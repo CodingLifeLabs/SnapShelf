@@ -5,6 +5,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Dates are Asia/S
 
 ## [Unreleased]
 
+### Added — Sprint 3: storage + OCR + text search
+- SQLiteShelfRepository (system libsqlite3 + FTS5, WAL, schema_meta v1) behind ShelfItemRepository
+- VisionOCRService (Vision VNRecognizeTextRequest, accurate, en/ko/ja, top→bottom)
+- IntakePipeline runs OCR after ingest (best-effort, never loses the item)
+- ShelfItemRepository.search / searchExcerpts (bm25 + snippet) + setOCR reindex
+- ShelfView search bar (onSubmit/onChange → runSearch) + results list w/ excerpts
+- App wired to SQLite + Vision OCR (falls back to JSON store if DB open fails)
+- 14 new unit tests; 56/56 pass, 91.6% coverage
+- EVAL PASS: real text image → Vision OCR extracted text → FTS5 search returns it
+
 ### Added — Sprint 2: Shelf interactions
 - Hover toolbar per item: copy image, share (ShareLink), pin/unpin, stow
 - Drag-anywhere via .onDrag (NSItemProvider file URL) -> Finder/Slack/Discord/ChatGPT/...

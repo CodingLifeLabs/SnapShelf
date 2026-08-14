@@ -15,4 +15,10 @@ public protocol ShelfItemRepository: Sendable {
     func delete(id: UUID) async throws
     /// Newest-first slice of length `limit`.
     func recent(_ limit: Int) async throws -> [ShelfItem]
+    /// Full-text search for matching items (excluding deleted).
+    func search(_ query: String, limit: Int) async throws -> [ShelfItem]
+    /// Full-text search returning items with a matched excerpt.
+    func searchExcerpts(_ query: String, limit: Int) async throws -> [SearchResult]
+    /// Attach OCR text to an item and refresh the search index.
+    func setOCR(id: UUID, text: String?) async throws
 }

@@ -7,12 +7,22 @@ struct ShelfView: View {
     let model: ShelfModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var clipboard = ClipboardService()
+    @State private var query = ""
+
+    private var isSearching: Bool {
+        !query.trimmingCharacters(in: .whitespaces).isEmpty
+    }
 
     var body: some View {
         VStack(spacing: 0) {
             header
             Divider()
-            content
+            searchBar
+            if isSearching {
+                searchContent
+            } else {
+                content
+            }
         }
         .background(.ultraThinMaterial)
         .frame(width: 340, height: 460)
@@ -41,6 +51,31 @@ struct ShelfView: View {
         .padding(12)
     }
 
+    private var searchBar: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+            TextField("Search screenshots by text…", text: $query)
+                .textFieldStyle(.plain)
+                .onSubmit { Task { await model.runSearch(query) } }
+            if !query.isEmpty {
+                Button {
+                    query = ""
+                    model.clearSearch()
+                } label: {
+                    Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel("Clear search")
+            }
+        }
+        .padding(8)
+        .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
+        .padding([.horizontal, .top], 12)
+        .onChange(of: query) { _, newValue in
+            Task { await model.runSearch(newValue) }
+        }
+    }
+
     @ViewBuilder private var content: some View {
         if model.pinned.isEmpty, model.recent.isEmpty {
             emptyState
@@ -51,14 +86,49 @@ struct ShelfView: View {
                         section(title: "Pinned", items: model.pinned)
                     }
                     if !model.recent.isEmpty || model.pinned.isEmpty {
-                        section(title: model.pinned.isEmpty ? "Recent" : "Recent",
-                                items: model.recent)
+                        section(title: "Recent", items: model.recent)
                     }
                 }
                 .padding(12)
             }
             .animation(reduceMotion ? nil : spring, value: sectionKey)
         }
+    }
+
+    @ViewBuilder private var searchContent: some View {
+        if model.isSearching {
+            ProgressView("Searching…").frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if model.searchResults.isEmpty {
+            VStack(spacing: 8) {
+                Image(systemName: "magnifyingglass").font(.title2).foregroundStyle(.secondary)
+                Text("No matches for “\(query)”").foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 8) {
+                    ForEach(model.searchResults) { result in
+                        resultRow(result)
+                    }
+                }
+                .padding(12)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func resultRow(_ result: SearchResult) -> some View {
+        HStack(spacing: 10) {
+            ThumbnailView(url: result.item.sourceURL)
+                .frame(width: 48, height: 32)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(result.item.displayName).font(.caption.weight(.semibold)).lineLimit(1)
+                Text(result.excerpt).font(.caption2).foregroundStyle(.secondary).lineLimit(2)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(6)
     }
 
     @ViewBuilder

@@ -51,6 +51,34 @@ public actor FileShelfRepository: ShelfItemRepository {
         return Array(sortedDescending().prefix(max(0, limit)))
     }
 
+    public func search(_ query: String, limit: Int) async throws -> [ShelfItem] {
+        try ensureLoaded()
+        let q = query.lowercased()
+        guard !q.isEmpty else { return [] }
+        let matches = sortedDescending().filter { item in
+            item.displayName.lowercased().contains(q)
+                || (item.ocrText?.lowercased().contains(q) ?? false)
+                || (item.appName?.lowercased().contains(q) ?? false)
+        }
+        return Array(matches.prefix(max(0, limit)))
+    }
+
+    public func searchExcerpts(_ query: String, limit: Int) async throws -> [SearchResult] {
+        try await search(query, limit: limit).map { item in
+            let source = item.ocrText ?? item.displayName
+            let excerpt = String(source.prefix(80))
+            return SearchResult(item: item, excerpt: excerpt)
+        }
+    }
+
+    public func setOCR(id: UUID, text: String?) async throws {
+        try ensureLoaded()
+        guard var item = byID[id] else { return }
+        item.ocrText = text
+        byID[id] = item
+        try persist()
+    }
+
     // MARK: - Internals
 
     private func ensureLoaded() throws {

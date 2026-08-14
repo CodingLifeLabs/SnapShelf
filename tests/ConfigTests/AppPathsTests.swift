@@ -15,6 +15,7 @@ final class AppPathsTests: XCTestCase {
         XCTAssertEqual(paths.inboxDirectory.path, "/Users/test/Library/Application Support/SnapShelf/Inbox")
         XCTAssertEqual(paths.libraryDirectory.path, "/Users/test/Library/Application Support/SnapShelf/Library")
         XCTAssertEqual(paths.storeFile.path, "/Users/test/Library/Application Support/SnapShelf/index.json")
+        XCTAssertEqual(paths.databaseFile.path, "/Users/test/Library/Application Support/SnapShelf/index.sqlite")
     }
 
     func test_make_isConsistentWithExplicitInit() {
@@ -24,7 +25,8 @@ final class AppPathsTests: XCTestCase {
             supportDirectory: derived.supportDirectory,
             inboxDirectory: derived.inboxDirectory,
             libraryDirectory: derived.libraryDirectory,
-            storeFile: derived.storeFile
+            storeFile: derived.storeFile,
+            databaseFile: derived.databaseFile
         )
         XCTAssertEqual(derived, explicit)
     }
@@ -39,7 +41,8 @@ final class AppPathsTests: XCTestCase {
             supportDirectory: tmp,
             inboxDirectory: tmp.appendingPathComponent("Inbox", isDirectory: true),
             libraryDirectory: tmp.appendingPathComponent("Library", isDirectory: true),
-            storeFile: tmp.appendingPathComponent("index.json", isDirectory: false)
+            storeFile: tmp.appendingPathComponent("index.json", isDirectory: false),
+            databaseFile: tmp.appendingPathComponent("index.sqlite", isDirectory: false)
         )
         defer { try? FileManager.default.removeItem(at: tmp) }
 
@@ -59,7 +62,8 @@ final class AppPathsTests: XCTestCase {
             supportDirectory: tmp,
             inboxDirectory: tmp.appendingPathComponent("Inbox", isDirectory: true),
             libraryDirectory: tmp.appendingPathComponent("Library", isDirectory: true),
-            storeFile: tmp.appendingPathComponent("index.json", isDirectory: false)
+            storeFile: tmp.appendingPathComponent("index.json", isDirectory: false),
+            databaseFile: tmp.appendingPathComponent("index.sqlite", isDirectory: false)
         )
         defer { try? FileManager.default.removeItem(at: tmp) }
 

@@ -31,10 +31,16 @@ public enum IntakeSupport {
 
 public final class DefaultIntakePipeline: IntakePipeline {
     private let repository: any ShelfItemRepository
+    private let ocrService: OCRService?
     private let clock: @Sendable () -> Date
 
-    public init(repository: any ShelfItemRepository, clock: @escaping @Sendable () -> Date = { Date() }) {
+    public init(
+        repository: any ShelfItemRepository,
+        ocrService: OCRService? = nil,
+        clock: @escaping @Sendable () -> Date = { Date() }
+    ) {
         self.repository = repository
+        self.ocrService = ocrService
         self.clock = clock
     }
 
@@ -48,6 +54,10 @@ public final class DefaultIntakePipeline: IntakePipeline {
             ingestedAt: clock()
         )
         try await repository.upsert(item)
+        // OCR is best-effort: a failure must never lose the captured item.
+        if let ocr = ocrService, let text = try? await ocr.recognize(url), !text.isEmpty {
+            try await repository.setOCR(id: item.id, text: text)
+        }
         return item
     }
 }

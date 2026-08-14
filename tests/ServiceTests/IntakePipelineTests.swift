@@ -58,6 +58,22 @@ final class DefaultIntakePipelineTests: XCTestCase {
             Array(storage.values).prefix(limit).map { $0 }
         }
         func snapshot() -> [ShelfItem] { Array(storage.values) }
+        func search(_ query: String, limit: Int) async throws -> [ShelfItem] {
+            let q = query.lowercased()
+            guard !q.isEmpty else { return [] }
+            let matches = storage.values.filter {
+                $0.displayName.lowercased().contains(q)
+                    || ($0.ocrText?.lowercased().contains(q) ?? false)
+            }
+            return Array(matches.prefix(max(0, limit)))
+        }
+        func searchExcerpts(_ query: String, limit: Int) async throws -> [SearchResult] {
+            try await search(query, limit: limit)
+                .map { SearchResult(item: $0, excerpt: $0.ocrText ?? $0.displayName) }
+        }
+        func setOCR(id: UUID, text: String?) async throws {
+            if var item = storage[id] { item.ocrText = text; storage[id] = item }
+        }
     }
 
     func test_ingest_persistsItemWithBeautifiedName() async throws {
@@ -95,5 +111,34 @@ final class DefaultIntakePipelineTests: XCTestCase {
         // capturedAt should come from the file, NOT the clock fallback
         XCTAssertNotEqual(item.capturedAt, clockDate)
         XCTAssertEqual(item.ingestedAt, clockDate)
+    }
+
+    // MARK: - OCR integration
+
+    private actor FakeOCR: OCRService {
+        private let text: String
+        init(_ text: String) { self.text = text }
+        func recognize(_ url: URL) async throws -> String { text }
+    }
+
+    func test_ingest_withOCR_indexesTextForSearch() async throws {
+        // Arrange: real FileShelfRepository + fake OCR service
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("snapshelf-intake-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let store = dir.appendingPathComponent("index.json", isDirectory: false)
+        let repo = FileShelfRepository(storeFile: store)
+        let ocr = FakeOCR("Supabase auth error 401")
+        let pipeline = DefaultIntakePipeline(
+            repository: repo, ocrService: ocr, clock: { Date(timeIntervalSince1970: 1) }
+        )
+
+        // Act
+        _ = try await pipeline.ingest(url: URL(fileURLWithPath: "/tmp/shot.png"))
+
+        // Assert: OCR text was indexed and is searchable
+        let results = try await repo.searchExcerpts("Supabase", limit: 10)
+        XCTAssertEqual(results.count, 1)
     }
 }

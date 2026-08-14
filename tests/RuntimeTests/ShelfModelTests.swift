@@ -20,6 +20,21 @@ final class ShelfModelTests: XCTestCase {
                 .prefix(limit)
                 .map { $0 }
         }
+        func search(_ query: String, limit: Int) async throws -> [ShelfItem] {
+            let q = query.lowercased()
+            guard !q.isEmpty else { return [] }
+            return Array(storage.values.filter {
+                $0.displayName.lowercased().contains(q)
+                    || ($0.ocrText?.lowercased().contains(q) ?? false)
+            }.prefix(max(0, limit)))
+        }
+        func searchExcerpts(_ query: String, limit: Int) async throws -> [SearchResult] {
+            try await search(query, limit: limit)
+                .map { SearchResult(item: $0, excerpt: $0.ocrText ?? $0.displayName) }
+        }
+        func setOCR(id: UUID, text: String?) async throws {
+            if var item = storage[id] { item.ocrText = text; storage[id] = item }
+        }
     }
 
     private actor FakePipeline: IntakePipeline {
@@ -47,7 +62,8 @@ final class ShelfModelTests: XCTestCase {
             supportDirectory: dir,
             inboxDirectory: dir.appendingPathComponent("Inbox", isDirectory: true),
             libraryDirectory: dir.appendingPathComponent("Library", isDirectory: true),
-            storeFile: dir.appendingPathComponent("index.json", isDirectory: false)
+            storeFile: dir.appendingPathComponent("index.json", isDirectory: false),
+            databaseFile: dir.appendingPathComponent("index.sqlite", isDirectory: false)
         )
         try paths.ensureExists()
         let repo = FakeRepo()

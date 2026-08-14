@@ -12,6 +12,8 @@ public final class ShelfModel {
     public private(set) var surfaced: [ShelfItem] = []
     public private(set) var statusMessage: String = ""
     public private(set) var isWatching: Bool = false
+    public private(set) var searchResults: [SearchResult] = []
+    public private(set) var isSearching = false
 
     public let paths: AppPaths
     public let settings: ShelfSettings
@@ -105,6 +107,24 @@ public final class ShelfModel {
 
     public var visibleItems: [ShelfItem] {
         surfaced.filter { $0.isSurfaced }
+    }
+
+    // MARK: - Search
+
+    public func runSearch(_ query: String) async {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { searchResults = []; return }
+        isSearching = true
+        defer { isSearching = false }
+        do {
+            searchResults = try await repository.searchExcerpts(trimmed, limit: 50)
+        } catch {
+            statusMessage = "Search failed: \(error)"
+        }
+    }
+
+    public func clearSearch() {
+        searchResults = []
     }
 
     /// Always-on-shelf items shown in a dedicated top section.

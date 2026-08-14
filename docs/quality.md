@@ -4,12 +4,13 @@
 
 ## 현재 등급
 
-- **상태**: 🟢 Sprint 2 완료 (EVAL PASS) / Sprint 3 대기
-- **커버리지**: 95.0% line (목표 ≥80% ✅) — Config 90 · Repo 98 · Runtime 94 · Service 97 · Types 100
+- **상태**: 🟢 Sprint 3 완료 (EVAL PASS) / Sprint 4 대기
+- **커버리지**: 91.6% line (목표 ≥80% ✅) — Config 91 · Repo 92 · Runtime 89 · Service 95 · Types 95
 - **레이어 위반**: 0건 (Gate 1)
 - **빌드**: 성공 (경고 0)
-- **테스트**: 42/42 통과
-- **비고**: Sprint 2 UI 인터랙션(드래그/공유/호버) 시각 검증은 대화형 환경 보완 예정
+- **테스트**: 56/56 통과
+- **저장소**: SQLite + FTS5 (시스템 libsqlite3), JSON 폴백 유지
+- **비고**: 검색 UI 타이핑 시각 검증은 대화형 환경 보완 예정; OCR+FTS5는 실제로 검증됨
 
 ## 5개 게이트 (네이티브 Swift 적응)
 
