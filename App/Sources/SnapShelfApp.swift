@@ -37,7 +37,9 @@ final class SnapShelfAppDelegate: NSObject, NSApplicationDelegate {
             // Rule-based rename is local & privacy-safe, so it's on by default.
             // Cloud/on-device LLM providers are opt-in via AIServiceFactory + settings.
             aiService: RuleBasedAIService(),
-            renameEnabled: true
+            renameEnabled: true,
+            // Smart Folder organizing within the app-owned library (TCC-free).
+            organizer: Organizer(libraryRoot: paths.libraryDirectory)
         )
         let model = ShelfModel(paths: paths, repository: repository, pipeline: pipeline)
         self.model = model

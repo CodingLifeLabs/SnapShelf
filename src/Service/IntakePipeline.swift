@@ -34,6 +34,7 @@ public final class DefaultIntakePipeline: IntakePipeline {
     private let ocrService: OCRService?
     private let aiService: AIService?
     private let renameEnabled: Bool
+    private let organizer: Organizer?
     private let clock: @Sendable () -> Date
 
     public init(
@@ -41,12 +42,14 @@ public final class DefaultIntakePipeline: IntakePipeline {
         ocrService: OCRService? = nil,
         aiService: AIService? = nil,
         renameEnabled: Bool = false,
+        organizer: Organizer? = nil,
         clock: @escaping @Sendable () -> Date = { Date() }
     ) {
         self.repository = repository
         self.ocrService = ocrService
         self.aiService = aiService
         self.renameEnabled = renameEnabled
+        self.organizer = organizer
         self.clock = clock
     }
 
@@ -68,8 +71,12 @@ public final class DefaultIntakePipeline: IntakePipeline {
         // AI rename is best-effort and opt-in; falls through silently on failure.
         if renameEnabled, let ai = aiService, let name = try? await ai.rename(item), !name.isEmpty {
             item.displayName = name
-            try await repository.upsert(item)
         }
+        // Smart Folder organizing: detect source + move into the library (best-effort).
+        if let organizer {
+            item = organizer.organize(item)
+        }
+        try await repository.upsert(item)
         return item
     }
 }

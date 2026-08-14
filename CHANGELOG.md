@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Dates are Asia/S
 
 ## [Unreleased]
 
+### Added — Sprint 5: Smart Folder auto-organize
+- FolderRule + FolderRuleKind (Types); FolderRuleEngine (priority/keyword/regex/category, defaultRules)
+- SourceDetector: TCC-free heuristic app/category detection from OCR + filename
+- Organizer: atomic file move into app-owned Library subpaths (best-effort, collision-safe)
+- IntakePipeline: capture → OCR → AI rename → organize (source_url updated)
+- 21 new unit tests (detection/engine/organizer); 99/99 pass, 87.2% coverage
+- EVAL PASS: dropped image auto-moved to Library/Supabase/, app detected, renamed
+- Scope: TCC-safe path (app Library); user-folder watch + accessibility detection deferred
+
 ### Added — Sprint 4: AI provider abstraction + rename/summary
 - AIService protocol (rename/summarize) + AIError
 - RuleBasedAIService (offline fallback; default ON — privacy-safe heuristic rename)

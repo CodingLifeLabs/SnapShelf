@@ -4,13 +4,13 @@
 
 ## 현재 등급
 
-- **상태**: 🟢 Sprint 4 완료 (EVAL PASS) / Sprint 5 대기
-- **커버리지**: 85.9% line (목표 ≥80% ✅) — Config 92 · Repo 92 · Runtime 89 · Service 74 · Types 95
+- **상태**: 🟢 Sprint 5 완료 (EVAL PASS) / Sprint 6 대기
+- **커버리지**: 87.2% line (목표 ≥80% ✅) — Config 92 · Repo 92 · Runtime 89 · Service 81 · Types 97
 - **레이어 위반**: 0건 (Gate 1)
 - **빌드**: 성공 (경고 0)
-- **테스트**: 78/78 통과
-- **AI**: provider 추상화(4 구현체+팩토리); rule-based rename 기본 ON, 클라우드/온디바이스 옵트인
-- **비고**: Service 74% — Keychain 실접근·FoundationModels(macOS26) 본문 미측정(정상). LLM 실검증은 키/서버 환경 필요
+- **테스트**: 99/99 통과
+- **Smart Folder**: 앱 Library 내 자동 정리(TCC 안전); 사용자 폴더 연동은 향후
+- **비고**: 핵심 루프(캡처→OCR→AI리네임→자동정리)가 파일 이동까지 실제로 동작 검증됨
 
 ## 5개 게이트 (네이티브 Swift 적응)
 
