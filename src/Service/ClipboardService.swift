@@ -20,4 +20,12 @@ public struct ClipboardService: Sendable {
         pasteboard.clearContents()
         return pasteboard.writeObjects([image])
     }
+
+    /// Copy raw PNG bytes back to the pasteboard (Smart Clipboard history entries).
+    @discardableResult
+    public func copyPNGData(_ data: Data, pasteboard: NSPasteboard = .general) -> Bool {
+        guard let image = NSImage(data: data) else { return false }
+        pasteboard.clearContents()
+        return pasteboard.writeObjects([image])
+    }
 }

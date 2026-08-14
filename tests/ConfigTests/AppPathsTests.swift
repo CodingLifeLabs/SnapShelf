@@ -16,6 +16,7 @@ final class AppPathsTests: XCTestCase {
         XCTAssertEqual(paths.libraryDirectory.path, "/Users/test/Library/Application Support/SnapShelf/Library")
         XCTAssertEqual(paths.storeFile.path, "/Users/test/Library/Application Support/SnapShelf/index.json")
         XCTAssertEqual(paths.databaseFile.path, "/Users/test/Library/Application Support/SnapShelf/index.sqlite")
+        XCTAssertEqual(paths.clipboardHistoryFile.path, "/Users/test/Library/Application Support/SnapShelf/clipboard-history.json")
     }
 
     func test_make_isConsistentWithExplicitInit() {
@@ -26,7 +27,8 @@ final class AppPathsTests: XCTestCase {
             inboxDirectory: derived.inboxDirectory,
             libraryDirectory: derived.libraryDirectory,
             storeFile: derived.storeFile,
-            databaseFile: derived.databaseFile
+            databaseFile: derived.databaseFile,
+            clipboardHistoryFile: derived.clipboardHistoryFile
         )
         XCTAssertEqual(derived, explicit)
     }
@@ -42,7 +44,8 @@ final class AppPathsTests: XCTestCase {
             inboxDirectory: tmp.appendingPathComponent("Inbox", isDirectory: true),
             libraryDirectory: tmp.appendingPathComponent("Library", isDirectory: true),
             storeFile: tmp.appendingPathComponent("index.json", isDirectory: false),
-            databaseFile: tmp.appendingPathComponent("index.sqlite", isDirectory: false)
+            databaseFile: tmp.appendingPathComponent("index.sqlite", isDirectory: false),
+            clipboardHistoryFile: tmp.appendingPathComponent("clipboard-history.json", isDirectory: false)
         )
         defer { try? FileManager.default.removeItem(at: tmp) }
 
@@ -63,7 +66,8 @@ final class AppPathsTests: XCTestCase {
             inboxDirectory: tmp.appendingPathComponent("Inbox", isDirectory: true),
             libraryDirectory: tmp.appendingPathComponent("Library", isDirectory: true),
             storeFile: tmp.appendingPathComponent("index.json", isDirectory: false),
-            databaseFile: tmp.appendingPathComponent("index.sqlite", isDirectory: false)
+            databaseFile: tmp.appendingPathComponent("index.sqlite", isDirectory: false),
+            clipboardHistoryFile: tmp.appendingPathComponent("clipboard-history.json", isDirectory: false)
         )
         defer { try? FileManager.default.removeItem(at: tmp) }
 

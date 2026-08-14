@@ -46,6 +46,7 @@ public final class SQLiteShelfRepository: ShelfItemRepository, @unchecked Sendab
             try exec("PRAGMA journal_mode=WAL;")
             try exec("PRAGMA foreign_keys=ON;")
             try createSchema()
+            try migrateIfNeeded()
         } catch {
             sqlite3_close(self.db)
             throw error
@@ -71,7 +72,8 @@ public final class SQLiteShelfRepository: ShelfItemRepository, @unchecked Sendab
             app_name TEXT,
             category TEXT,
             status TEXT NOT NULL DEFAULT 'resting',
-            ocr_text TEXT
+            ocr_text TEXT,
+            note TEXT
         );
         CREATE INDEX IF NOT EXISTS idx_items_captured ON shelf_items(captured_at DESC);
         CREATE VIRTUAL TABLE IF NOT EXISTS shelf_items_fts USING fts5(
@@ -79,11 +81,30 @@ public final class SQLiteShelfRepository: ShelfItemRepository, @unchecked Sendab
             content,
             tokenize = 'porter unicode61 remove_diacritics 2'
         );
-        INSERT OR IGNORE INTO schema_meta(key, value) VALUES('version', '1');
+        INSERT OR IGNORE INTO schema_meta(key, value) VALUES('version', '2');
         """
 
     private func createSchema() throws {
         try exec(Self.schemaSQL)
+    }
+
+    /// v1 -> v2: add the `note` column for AI/user notes (Sprint 7).
+    /// CREATE TABLE IF NOT EXISTS does not extend an existing table, so older
+    /// databases are upgraded with ALTER TABLE.
+    private func migrateIfNeeded() throws {
+        guard !tableInfo("shelf_items").contains("note") else { return }
+        try exec("ALTER TABLE shelf_items ADD COLUMN note TEXT;")
+        try exec("UPDATE schema_meta SET value = '2' WHERE key = 'version';")
+    }
+
+    /// Column names of a table via PRAGMA table_info.
+    private func tableInfo(_ table: String) -> [String] {
+        guard let stmt = try? prepare("PRAGMA table_info(\(table));") else { return [] }
+        var names: [String] = []
+        while (try? stmt.step()) == true, let name = stmt.text(1) {
+            names.append(name)
+        }
+        return names
     }
 
     private func exec(_ sql: String) throws {
@@ -131,6 +152,17 @@ public final class SQLiteShelfRepository: ShelfItemRepository, @unchecked Sendab
         }
     }
 
+    public func setNote(id: UUID, text: String?) async throws {
+        try inTransaction {
+            try self.exec(
+                "UPDATE shelf_items SET note = \(sqlNullable(text)) WHERE id = '\(escape(id.uuidString))';"
+            )
+            if let item = try self.one(id: id) {
+                try self.reindexFTS(item)
+            }
+        }
+    }
+
     public func search(_ query: String, limit: Int) async throws -> [ShelfItem] {
         guard let fts = Self.ftsQuery(query) else { return [] }
         return try runQuery(
@@ -149,7 +181,7 @@ public final class SQLiteShelfRepository: ShelfItemRepository, @unchecked Sendab
         guard let fts = Self.ftsQuery(query) else { return [] }
         let stmt = try prepare("""
             SELECT s.id, s.source_url, s.display_name, s.original_name, s.captured_at, s.ingested_at,
-                   s.app_name, s.category, s.status, s.ocr_text,
+                   s.app_name, s.category, s.status, s.ocr_text, s.note,
                    snippet(shelf_items_fts, 1, '', '', '…', 12) AS excerpt
             FROM shelf_items_fts f
             JOIN shelf_items s ON s.id = f.item_id
@@ -160,7 +192,7 @@ public final class SQLiteShelfRepository: ShelfItemRepository, @unchecked Sendab
         stmt.bind(2, Int64(max(0, limit)))
         var results: [SearchResult] = []
         while try stmt.step() {
-            results.append(SearchResult(item: decode(stmt), excerpt: stmt.text(10) ?? ""))
+            results.append(SearchResult(item: decode(stmt), excerpt: stmt.text(11) ?? ""))
         }
         return results
     }
@@ -168,14 +200,14 @@ public final class SQLiteShelfRepository: ShelfItemRepository, @unchecked Sendab
     // MARK: - Internals
 
     private var columns: String {
-        "id, source_url, display_name, original_name, captured_at, ingested_at, app_name, category, status, ocr_text"
+        "id, source_url, display_name, original_name, captured_at, ingested_at, app_name, category, status, ocr_text, note"
     }
 
     private func upsertRow(_ item: ShelfItem) throws {
         let stmt = try prepare("""
             INSERT OR REPLACE INTO shelf_items
-            (id, source_url, display_name, original_name, captured_at, ingested_at, app_name, category, status, ocr_text)
-            VALUES (?,?,?,?,?,?,?,?,?,?);
+            (id, source_url, display_name, original_name, captured_at, ingested_at, app_name, category, status, ocr_text, note)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?);
             """)
         stmt.bind(1, item.id.uuidString)
         stmt.bind(2, item.sourceURL.absoluteString)
@@ -187,6 +219,7 @@ public final class SQLiteShelfRepository: ShelfItemRepository, @unchecked Sendab
         stmt.bind(8, item.category?.rawValue)
         stmt.bind(9, item.status.rawValue)
         stmt.bind(10, item.ocrText)
+        stmt.bind(11, item.note)
         _ = try stmt.step()
         try reindexFTS(item)
     }
@@ -196,7 +229,7 @@ public final class SQLiteShelfRepository: ShelfItemRepository, @unchecked Sendab
         del.bind(1, item.id.uuidString)
         _ = try del.step()
 
-        let content = [item.ocrText, item.displayName, item.appName]
+        let content = [item.ocrText, item.displayName, item.appName, item.note]
             .compactMap { $0 }
             .joined(separator: " ")
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -247,7 +280,8 @@ public final class SQLiteShelfRepository: ShelfItemRepository, @unchecked Sendab
             appName: stmt.text(6),
             category: stmt.text(7).flatMap { ItemCategory(rawValue: $0) },
             status: ShelfItemStatus(rawValue: stmt.text(8) ?? "") ?? .resting,
-            ocrText: stmt.text(9)
+            ocrText: stmt.text(9),
+            note: stmt.text(10)
         )
     }
 

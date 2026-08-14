@@ -36,6 +36,7 @@ public struct ShelfItem: Identifiable, Sendable, Codable, Equatable {
     public var category: ItemCategory?
     public var status: ShelfItemStatus
     public var ocrText: String?
+    public var note: String?
 
     public init(
         id: UUID = UUID(),
@@ -47,7 +48,8 @@ public struct ShelfItem: Identifiable, Sendable, Codable, Equatable {
         appName: String? = nil,
         category: ItemCategory? = nil,
         status: ShelfItemStatus = .resting,
-        ocrText: String? = nil
+        ocrText: String? = nil,
+        note: String? = nil
     ) {
         self.id = id
         self.sourceURL = sourceURL
@@ -59,6 +61,7 @@ public struct ShelfItem: Identifiable, Sendable, Codable, Equatable {
         self.category = category
         self.status = status
         self.ocrText = ocrText
+        self.note = note
     }
 }
 

@@ -15,19 +15,22 @@ public struct AppPaths: Sendable, Equatable {
     public let libraryDirectory: URL
     public let storeFile: URL
     public let databaseFile: URL
+    public let clipboardHistoryFile: URL
 
     public init(
         supportDirectory: URL,
         inboxDirectory: URL,
         libraryDirectory: URL,
         storeFile: URL,
-        databaseFile: URL
+        databaseFile: URL,
+        clipboardHistoryFile: URL
     ) {
         self.supportDirectory = supportDirectory
         self.inboxDirectory = inboxDirectory
         self.libraryDirectory = libraryDirectory
         self.storeFile = storeFile
         self.databaseFile = databaseFile
+        self.clipboardHistoryFile = clipboardHistoryFile
     }
 
     /// Derive all paths from a home directory.
@@ -41,7 +44,8 @@ public struct AppPaths: Sendable, Equatable {
             inboxDirectory: support.appendingPathComponent("Inbox", isDirectory: true),
             libraryDirectory: support.appendingPathComponent("Library", isDirectory: true),
             storeFile: support.appendingPathComponent("index.json", isDirectory: false),
-            databaseFile: support.appendingPathComponent("index.sqlite", isDirectory: false)
+            databaseFile: support.appendingPathComponent("index.sqlite", isDirectory: false),
+            clipboardHistoryFile: support.appendingPathComponent("clipboard-history.json", isDirectory: false)
         )
     }
 

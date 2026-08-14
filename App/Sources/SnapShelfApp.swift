@@ -50,7 +50,19 @@ final class SnapShelfAppDelegate: NSObject, NSApplicationDelegate {
 
         let library = LibraryModel(libraryRoot: paths.libraryDirectory)
         let collections = CollectionModel()
-        let libraryController = LibraryWindowController(model: model, library: library, collections: collections)
+        let cleanup = CleanupModel(repository: repository)
+        let duplicates = DuplicatesModel(repository: repository)
+        let clipboard = ClipboardHistoryModel(
+            history: ClipboardHistoryRepository(storeFile: paths.clipboardHistoryFile)
+        )
+        let libraryController = LibraryWindowController(
+            model: model,
+            library: library,
+            collections: collections,
+            cleanup: cleanup,
+            duplicates: duplicates,
+            clipboard: clipboard
+        )
         self.libraryController = libraryController
 
         statusBarController = StatusBarController(

@@ -1,4 +1,5 @@
 import XCTest
+import SQLite3
 @testable import SnapShelfRepo
 @testable import SnapShelfTypes
 
@@ -155,5 +156,118 @@ final class SQLiteShelfRepositoryTests: XCTestCase {
         XCTAssertNil(SQLiteShelfRepository.ftsQuery("   "))
         // embedded quotes are neutralized (quote -> space -> two tokens)
         XCTAssertEqual(SQLiteShelfRepository.ftsQuery("a\"b"), "\"a\" \"b\"")
+    }
+
+    // MARK: - Notes (Sprint 7)
+
+    func test_setNote_persistsAndReloads() async throws {
+        let (repo, dir) = try makeRepo()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let it = item("noted.png")
+        try await repo.upsert(it)
+
+        try await repo.setNote(id: it.id, text: "invoice for March")
+
+        let loaded = try await repo.load()
+        XCTAssertEqual(loaded.first?.note, "invoice for March")
+    }
+
+    func test_setNote_clearingRemovesNote() async throws {
+        let (repo, dir) = try makeRepo()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let it = item("noted.png", ocr: nil, captured: 10)
+        try await repo.upsert(it)
+        try await repo.setNote(id: it.id, text: "temporary")
+
+        try await repo.setNote(id: it.id, text: nil)
+
+        let loaded = try await repo.load()
+        XCTAssertNil(loaded.first?.note)
+    }
+
+    func test_setNote_isSearchable() async throws {
+        let (repo, dir) = try makeRepo()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let it = item("shot.png")
+        try await repo.upsert(it)
+        try await repo.setNote(id: it.id, text: "renew passport before trip")
+
+        let results = try await repo.search("passport", limit: 10)
+        XCTAssertEqual(results.count, 1)
+        XCTAssertEqual(results.first?.id, it.id)
+    }
+
+    func test_upsert_roundTripsNote() async throws {
+        let (repo, dir) = try makeRepo()
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        var it = item("noted.png")
+        it.note = "design review feedback"
+        try await repo.upsert(it)
+
+        let loaded = try await repo.load()
+        XCTAssertEqual(loaded.first?.note, "design review feedback")
+    }
+
+    func test_migration_oldV1DatabaseGainsNoteColumn() async throws {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("snapshelf-sqlite-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let dbURL = dir.appendingPathComponent("index.sqlite", isDirectory: false)
+
+        // Create a legacy v1 schema (no note column) with a real row.
+        let legacyID = UUID()
+        let raw = try SQLite3Raw(path: dbURL.path)
+        try raw.exec("""
+            CREATE TABLE shelf_items (
+                id TEXT PRIMARY KEY,
+                source_url TEXT NOT NULL,
+                display_name TEXT NOT NULL,
+                original_name TEXT,
+                captured_at INTEGER NOT NULL,
+                ingested_at INTEGER NOT NULL,
+                app_name TEXT,
+                category TEXT,
+                status TEXT NOT NULL DEFAULT 'resting',
+                ocr_text TEXT
+            );
+            CREATE TABLE schema_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+            INSERT INTO schema_meta(key, value) VALUES('version', '1');
+            INSERT INTO shelf_items VALUES('\(legacyID.uuidString)','file:///old.png','old.png',NULL,1,1,NULL,NULL,'resting',NULL);
+            """)
+
+        // Reopening runs the migration; note is readable and writable.
+        let migrated = try SQLiteShelfRepository(databaseURL: dbURL)
+        let loaded = try await migrated.load()
+        XCTAssertEqual(loaded.first?.id, legacyID)
+        XCTAssertEqual(loaded.first?.displayName, "old.png")
+        XCTAssertNil(loaded.first?.note)
+
+        try await migrated.setNote(id: legacyID, text: "migrated note")
+        let reloaded = try await migrated.load()
+        XCTAssertEqual(reloaded.first?.note, "migrated note")
+    }
+}
+
+/// Minimal raw sqlite3 handle for creating legacy schemas in migration tests.
+private final class SQLite3Raw {
+    private var db: OpaquePointer?
+
+    init(path: String) throws {
+        var handle: OpaquePointer?
+        guard sqlite3_open_v2(path, &handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nil) == SQLITE_OK else {
+            sqlite3_close(handle)
+            throw SQLiteError.open("cannot open \(path)")
+        }
+        self.db = handle
+    }
+
+    deinit { sqlite3_close(db) }
+
+    func exec(_ sql: String) throws {
+        if sqlite3_exec(db, sql, nil, nil, nil) != SQLITE_OK {
+            throw SQLiteError.exec(String(cString: sqlite3_errmsg(db)))
+        }
     }
 }

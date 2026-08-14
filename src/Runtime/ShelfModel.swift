@@ -109,6 +109,22 @@ public final class ShelfModel {
         surfaced.filter { $0.isSurfaced }
     }
 
+    // MARK: - Notes
+
+    /// Attach (or clear, when empty) a user note on an item and persist it.
+    public func saveNote(id: UUID, text: String) async {
+        guard let index = surfaced.firstIndex(where: { $0.id == id }) else { return }
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        var item = surfaced[index]
+        item.note = trimmed.isEmpty ? nil : trimmed
+        surfaced[index] = item
+        do {
+            try await repository.setNote(id: id, text: item.note)
+        } catch {
+            statusMessage = "Save note failed: \(error)"
+        }
+    }
+
     // MARK: - Search
 
     public func runSearch(_ query: String) async {

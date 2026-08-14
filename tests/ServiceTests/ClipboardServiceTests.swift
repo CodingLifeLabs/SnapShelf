@@ -58,6 +58,23 @@ final class ClipboardServiceTests: XCTestCase {
         XCTAssertFalse(ok)
     }
 
+    func test_copyPNGData_writesImageToPasteboard() throws {
+        let url = try writeTempPng()
+        defer { try? FileManager.default.removeItem(at: url) }
+        let png = try Data(contentsOf: url)
+        let pb = makePasteboard()
+
+        let ok = ClipboardService().copyPNGData(png, pasteboard: pb)
+
+        XCTAssertTrue(ok)
+        XCTAssertNotNil(pb.data(forType: .tiff))
+    }
+
+    func test_copyPNGData_rejectsNonImageBytes() {
+        let pb = makePasteboard()
+        XCTAssertFalse(ClipboardService().copyPNGData(Data([1, 2, 3]), pasteboard: pb))
+    }
+
     // MARK: - helpers
 
     private enum FixtureError: Error { case encode }

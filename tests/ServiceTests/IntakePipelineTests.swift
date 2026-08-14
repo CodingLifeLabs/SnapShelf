@@ -74,6 +74,9 @@ final class DefaultIntakePipelineTests: XCTestCase {
         func setOCR(id: UUID, text: String?) async throws {
             if var item = storage[id] { item.ocrText = text; storage[id] = item }
         }
+        func setNote(id: UUID, text: String?) async throws {
+            if var item = storage[id] { item.note = text; storage[id] = item }
+        }
     }
 
     func test_ingest_persistsItemWithBeautifiedName() async throws {

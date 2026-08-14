@@ -21,4 +21,6 @@ public protocol ShelfItemRepository: Sendable {
     func searchExcerpts(_ query: String, limit: Int) async throws -> [SearchResult]
     /// Attach OCR text to an item and refresh the search index.
     func setOCR(id: UUID, text: String?) async throws
+    /// Attach a user note to an item and refresh the search index.
+    func setNote(id: UUID, text: String?) async throws
 }

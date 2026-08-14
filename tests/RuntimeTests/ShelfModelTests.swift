@@ -35,6 +35,10 @@ final class ShelfModelTests: XCTestCase {
         func setOCR(id: UUID, text: String?) async throws {
             if var item = storage[id] { item.ocrText = text; storage[id] = item }
         }
+        func setNote(id: UUID, text: String?) async throws {
+            if var item = storage[id] { item.note = text; storage[id] = item }
+        }
+        func find(_ id: UUID) async throws -> ShelfItem? { storage[id] }
     }
 
     private actor FakePipeline: IntakePipeline {
@@ -63,7 +67,8 @@ final class ShelfModelTests: XCTestCase {
             inboxDirectory: dir.appendingPathComponent("Inbox", isDirectory: true),
             libraryDirectory: dir.appendingPathComponent("Library", isDirectory: true),
             storeFile: dir.appendingPathComponent("index.json", isDirectory: false),
-            databaseFile: dir.appendingPathComponent("index.sqlite", isDirectory: false)
+            databaseFile: dir.appendingPathComponent("index.sqlite", isDirectory: false),
+            clipboardHistoryFile: dir.appendingPathComponent("clipboard-history.json", isDirectory: false)
         )
         try paths.ensureExists()
         let repo = FakeRepo()
@@ -173,6 +178,38 @@ final class ShelfModelTests: XCTestCase {
         let inbox = env.model.paths.inboxDirectory
         let entries = (try? FileManager.default.contentsOfDirectory(atPath: inbox.path)) ?? []
         XCTAssertTrue(entries.contains(where: { $0.hasPrefix("Simulated-") && $0.hasSuffix(".png") }))
+    }
+
+    // MARK: - notes
+
+    func test_saveNote_setsTrimsAndPersists() async throws {
+        let env = try makeEnv()
+        defer { try? FileManager.default.removeItem(at: env.dir) }
+        await env.model.ingest(url: URL(fileURLWithPath: "/x/a.png"))
+        let id = env.model.surfaced.first!.id
+        // FakePipeline does not touch the repo; simulate the pipeline's upsert.
+        try await env.repo.upsert(env.model.surfaced.first!)
+
+        await env.model.saveNote(id: id, text: "  invoice for March  ")
+
+        XCTAssertEqual(env.model.surfaced.first?.note, "invoice for March")
+        let stored = try await env.repo.find(id)
+        XCTAssertEqual(stored?.note, "invoice for March")
+    }
+
+    func test_saveNote_emptyTextClearsNote() async throws {
+        let env = try makeEnv()
+        defer { try? FileManager.default.removeItem(at: env.dir) }
+        await env.model.ingest(url: URL(fileURLWithPath: "/x/a.png"))
+        let id = env.model.surfaced.first!.id
+        try await env.repo.upsert(env.model.surfaced.first!)
+        await env.model.saveNote(id: id, text: "temporary")
+
+        await env.model.saveNote(id: id, text: "   ")
+
+        XCTAssertNil(env.model.surfaced.first?.note)
+        let stored = try await env.repo.find(id)
+        XCTAssertNil(stored?.note)
     }
 
     // MARK: - pin / stow

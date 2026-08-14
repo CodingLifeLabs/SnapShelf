@@ -79,6 +79,14 @@ public actor FileShelfRepository: ShelfItemRepository {
         try persist()
     }
 
+    public func setNote(id: UUID, text: String?) async throws {
+        try ensureLoaded()
+        guard var item = byID[id] else { return }
+        item.note = text
+        byID[id] = item
+        try persist()
+    }
+
     // MARK: - Internals
 
     private func ensureLoaded() throws {

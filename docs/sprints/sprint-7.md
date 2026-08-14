@@ -24,3 +24,21 @@
 
 ## 의존 Sprint
 이전: Sprint 6
+
+## GENERATOR 자가 검증 결과
+실행 일시: 2026-08-15 08:20 KST
+
+| Gate | 항목 | 결과 | 비고 |
+|------|------|------|------|
+| 1 | 레이어 의존성 | ✅ PASS | 위반 0건 (파일 46) |
+| 2 | 빌드 (xcodebuild) | ✅ PASS | BUILD SUCCEEDED |
+| 3 | SwiftLint --strict | ✅ PASS | 0 violations (72 files) |
+| 4 | 테스트 커버리지 | ✅ PASS | 87.0% (Config 92.2 · Repo 92.3 · Runtime 84.0 · Service 84.9 · Types 97.5), 146/146 통과 |
+| 5 | 빌드 성공 | ✅ PASS | - |
+
+### 구현 완료 항목
+- AutoCleanup + CleanupModel: 30일 경과 임시 항목 → NSWorkspace.recycle, 실행취소 지원
+- PerceptualHash(pHash) + Deduplicator + DuplicatesModel/View: 유사 그룹 → 보관본 추천 → 승인
+- ClipboardHistoryRepository + ClipboardHistoryModel/View: pasteboard 이미지 히스토리 (JSON, 로컬)
+- NotesView: 항목별 메모 (ShelfItem.notes 컬럼 + 저장)
+- 신규 테스트: PerceptualHash/Deduplicator/AutoCleanup/CleanupModel/DuplicatesModel/ClipboardHistoryRepository/ClipboardHistoryModel
