@@ -1,0 +1,31 @@
+/* SnapShelf design tokens — shared by landing. App parity: BRAND_GUIDE.md */
+:root {
+  /* Palette */
+  --ink: #0f1015;
+  --ink-2: #14161c;
+  --ink-3: #1c1f28;
+  --paper: #fbfbfd;
+  --paper-2: #f1f1f5;
+  --muted: #8a8fa3;
+  --muted-2: #5b6070;
+  --accent: #6e56cf;
+  --accent-soft: #8f7ce0;
+  --amber: #e8a33d;
+  --line: rgba(251, 251, 253, 0.12);
+  --line-strong: rgba(251, 251, 253, 0.22);
+  --line-dark: rgba(15, 16, 21, 0.12);
+
+  /* Type */
+  --font-display: "Fraunces", "Iowan Old Style", "Palatino Linotype", serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --text-base: clamp(1rem, 0.95rem + 0.3vw, 1.125rem);
+  --text-lead: clamp(1.125rem, 1rem + 0.6vw, 1.375rem);
+  --text-h2: clamp(2rem, 1.4rem + 2.6vw, 3.5rem);
+  --text-hero: clamp(3rem, 1.6rem + 6.5vw, 6.5rem);
+
+  /* Space & motion */
+  --space-section: clamp(4rem, 3rem + 5vw, 9rem);
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}

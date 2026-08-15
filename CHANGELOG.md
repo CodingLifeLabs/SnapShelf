@@ -53,6 +53,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Dates are Asia/S
 - 31 new unit tests; 177/177 pass, 87.5% coverage
 - EVAL PASS: settings window opens via menu, prefs round-trip verified; extraction logic via XCTest
 
+### Added — Sprint 9: landing page + brand
+- web/ 정적 랜딩: Hero 시그니처 애니메이션(캡처 타일→선반), Problem, Core Loop, 비대칭 벤토 Features, 비교표, Privacy, FAQ, Pricing, Download
+- 브랜드 토큰 앱↔랜딩 일치 (ink #0F1015 / indigo #6E56CF / amber #E8A33D, Fraunces+Inter)
+- JS gzipped 654B (예산 80KB), 콘솔 에러 0, 320~1440 반응형, reduce-motion 정적 폴백
+- AppIcon.appiconset (1024 opaque PNG, 레거시 10-사이즈 형식) + Assets.car 번들 반영
+- Project.yml: resources 빌드 페이즈 수정(XcodeGen resources 키 무시 이슈 해결) + APPICON_NAME 설정
+- EVAL PASS: Playwright 풀페이지/반응형/콘솔 검증 + 앱 아이콘 번들 확인
+
 ### Added — Sprint 3: storage + OCR + text search
 - SQLiteShelfRepository (system libsqlite3 + FTS5, WAL, schema_meta v1) behind ShelfItemRepository
 - VisionOCRService (Vision VNRecognizeTextRequest, accurate, en/ko/ja, top→bottom)

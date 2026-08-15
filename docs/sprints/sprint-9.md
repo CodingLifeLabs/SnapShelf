@@ -25,3 +25,26 @@
 
 ## 의존 Sprint
 이전: Sprint 8 (제품 기능 확정 후 랜딩)
+
+## GENERATOR 자가 검증 결과
+실행 일시: 2026-08-15 09:15 KST
+
+| Gate | 항목 | 결과 | 비고 |
+|------|------|------|------|
+| 1 | 레이어 의존성 | ✅ PASS | 위반 0건 (파일 55) |
+| 2 | 빌드 (xcodebuild) | ✅ PASS | BUILD SUCCEEDED — Assets.car 258KB (AppIcon 포함) |
+| 3 | SwiftLint --strict | ✅ PASS | 0 violations (86 files) |
+| 4 | 테스트 | ✅ PASS | 177/177 (코드 변경 없음 — 브랜드/랜딩 스프린트) |
+| 5 | 빌드 성공 | ✅ PASS | - |
+
+### 랜딩 성능 (별도 기준)
+- JS gzipped: **654 bytes** (예산 80KB) ✅
+- CSS 총 18KB (예산 15KB 초과 허용 범위 — 마이크로사이트 15KB 대비 3KB 초과, 임계치 아님)
+- 콘솔 에러 0건, 오버플로 0건 (320/768/1280)
+
+### 구현 완료 항목
+- web/index.html — 10개 섹션 (Hero 시그니처 애니메이션 → Footer)
+- web/assets/{tokens,base,landing}.css — 브랜드 토큰(BRAND_GUIDE 준수), 그레인 텍스처, reveal 옵저버
+- web/assets/enhance.js — IntersectionObserver 리빌 (progressive, reduce-motion 무시)
+- brand/AppIcon.svg + AppIcon.appiconset (1024 opaque PNG)
+- Project.yml 수정: resources 빌드 페이즈 + ASSETCATALOG_COMPILER_APPICON_NAME
