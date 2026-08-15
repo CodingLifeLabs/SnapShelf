@@ -11,6 +11,7 @@ struct ShelfItemView: View {
 
     @State private var hovered = false
     @State private var copiedFlash = false
+    @State private var isDragging = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -44,10 +45,22 @@ struct ShelfItemView: View {
         }
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(.separator, lineWidth: 0.5))
         .contentShape(Rectangle())
+        // Spec §4: lift on drag start (scale + elevation + accent ring), spring back on drop.
+        .scaleEffect(isDragging ? 1.04 : 1.0)
+        .shadow(color: .black.opacity(isDragging ? 0.28 : 0), radius: isDragging ? 10 : 0, y: 4)
+        .animation(reduceMotion ? nil : .spring(response: 0.22, dampingFraction: 0.8), value: isDragging)
         .onHover { hovering in
             hovered = hovering
         }
-        .onDrag { NSItemProvider(object: item.sourceURL as NSURL) }
+        .onDrag {
+            isDragging = true
+            return NSItemProvider(object: item.sourceURL as NSURL)
+        }
+        .onDrop(of: [.url], isTargeted: nil) { _ in
+            // Local drop-back ends the lift; the handler is a no-op returning true.
+            isDragging = false
+            return true
+        }
         .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: hovered)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityLabel)
@@ -79,6 +92,7 @@ struct ShelfItemView: View {
                         Image(systemName: "square.and.arrow.up")
                     }
                     .help("Share")
+                    .accessibilityLabel("Share \(item.displayName)")
                     .buttonStyle(.borderless)
                     toolbarButton(item.status == .pinned ? "pin.slash" : "pin",
                                   help: item.status == .pinned ? "Unpin" : "Pin") {
@@ -99,6 +113,7 @@ struct ShelfItemView: View {
         }
         .buttonStyle(.borderless)
         .help(help)
+        .accessibilityLabel(help)
     }
 
     private func flashCopied() {

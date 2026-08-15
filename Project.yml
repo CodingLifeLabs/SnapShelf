@@ -21,12 +21,21 @@ settings:
     SWIFT_STRICT_CONCURRENCY: minimal
     SWIFT_TREAT_WARNINGS_AS_ERRORS: NO
     DEVELOPMENT_TEAM: ""
-    CODE_SIGN_IDENTITY: "-"
-    CODE_SIGNING_REQUIRED: NO
-    CODE_SIGNING_ALLOWED: NO
-    ENABLE_HARDENED_RUNTIME: YES
     ALWAYS_SEARCH_USER_PATHS: NO
     CLANG_ENABLE_MODULES: YES
+  configs:
+    # Debug: unsigned (fast local iteration, matches earlier sprints)
+    Debug:
+      CODE_SIGN_IDENTITY: "-"
+      CODE_SIGNING_REQUIRED: NO
+      CODE_SIGNING_ALLOWED: NO
+      ENABLE_HARDENED_RUNTIME: NO
+    # Release: ad-hoc signature + Hardened Runtime (notarization-ready)
+    Release:
+      CODE_SIGN_IDENTITY: "-"
+      CODE_SIGNING_REQUIRED: YES
+      CODE_SIGNING_ALLOWED: YES
+      ENABLE_HARDENED_RUNTIME: YES
 
 # Reusable static-framework settings for every layer module.
 layer_framework_settings:

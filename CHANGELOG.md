@@ -61,6 +61,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Dates are Asia/S
 - Project.yml: resources 빌드 페이즈 수정(XcodeGen resources 키 무시 이슈 해결) + APPICON_NAME 설정
 - EVAL PASS: Playwright 풀페이지/반응형/콘솔 검증 + 앱 아이콘 번들 확인
 
+### Added — Sprint 10: animation tuning, hardened runtime, DMG
+- ANIMATION_SPEC 반영: 드래그 리프트(scale+shadow+spring), 검색 결과 12ms stagger 등장, reduce-motion 유지
+- 접근성: 아이콘 버튼 명시적 accessibilityLabel
+- Project.yml: Debug(무서명)/Release(ad-hoc + Hardened Runtime) 분리 — 공증 전 단계 요건 충족
+- DMG 패키징(SnapShelf-0.1.0.dmg, 2.1MB) + SHA-256 체크섬
+- ADR-0010: 공증/배포 전략 (공증 제출은 사용자 확인 게이트)
+- Gates: lint✅ build✅ swiftlint✅ tests177✅
+
 ### Added — Sprint 3: storage + OCR + text search
 - SQLiteShelfRepository (system libsqlite3 + FTS5, WAL, schema_meta v1) behind ShelfItemRepository
 - VisionOCRService (Vision VNRecognizeTextRequest, accurate, en/ko/ja, top→bottom)

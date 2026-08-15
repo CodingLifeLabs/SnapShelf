@@ -8,6 +8,7 @@ struct ShelfView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var clipboard = ClipboardService()
     @State private var query = ""
+    @State private var appeared = false
 
     private var isSearching: Bool {
         !query.trimmingCharacters(in: .whitespaces).isEmpty
@@ -107,8 +108,15 @@ struct ShelfView: View {
         } else {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 8) {
-                    ForEach(model.searchResults) { result in
+                    ForEach(Array(model.searchResults.enumerated()), id: \.element.item.id) { index, result in
                         resultRow(result)
+                            .opacity((reduceMotion || appeared) ? 1 : 0)
+                            .offset(y: (reduceMotion || appeared) ? 0 : 6)
+                            .task {
+                                guard !reduceMotion else { return }
+                                try? await Task.sleep(nanoseconds: UInt64(index) * 12_000_000)
+                                withAnimation(.easeOut(duration: 0.18)) { appeared = true }
+                            }
                     }
                 }
                 .padding(12)

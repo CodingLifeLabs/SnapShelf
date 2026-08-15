@@ -14,14 +14,14 @@
 | ADR-0005 | SQLite + FTS5 검색 | Accepted | 시스템 sqlite(FTS5 포함). 100K 장 ≤150ms. 메타 + OCR 텍스트 색인. |
 | ADR-0006 | AI provider 추상화 | Accepted | `AIService` 프로토콜. Foundation Models(온디바이스) 우선 + OpenAI/Claude/Gemini/Ollama. 옵트인, 키 Keychain. |
 | ADR-0007 | LSUIElement accessory + NSPanel Shelf | Accepted | Dock 없는 메뉴바 앱. Shelf 는 `.nonactivatingPanel`(포커스 탈취 없음) — 핵심 UX. |
+| ADR-0008 | 시스템 SQLite3 유지 | Accepted | Sprint 3에서 채택 — GRDB 대비 의존성 0, FTS5 포함. 복잡도 증가 시 재검토. |
+| ADR-0010 | 공증/배포 파이프라인 | Accepted | Release=ad-hoc+Hardened Runtime, DMG+체크섬 자동. 공증 제출은 사용자 확인 게이트. `adr-0010-notarization-deploy.md` |
 
 ## Proposed (결정 보류 — 해당 Sprint 에서 확정)
 
 | ADR | 제목 | 상태 | 검토 시점 | 결정 기준 |
 |-----|------|------|-----------|-----------|
-| ADR-0008 | GRDB.swift vs 시스템 SQLite3 | Proposed | Sprint 3 | 쿼리 편의성/의존성 비용. 시스템 sqlite3 로 시작, 복잡도 증가 시 GRDB. |
-| ADR-0009 | 임베딩 기반 벡터 검색 도입 | Proposed | Sprint 6 / v2 | FTS5+LLM 재랭킹(v1) 대비 품질/비용. sqlite-vec 또는 로컬 ONNX. |
-| ADR-0010 | 공증/배포 파이프라인 | Proposed | Sprint 10 | notarytool 자동화 여부, 키체인 자격증명 관리. 사용자 확인 필수. |
+| ADR-0009 | 임베딩 기반 벡터 검색 도입 | Proposed | v2 | FTS5+LLM 재랭킹(v1) 대비 품질/비용. sqlite-vec 또는 로컬 ONNX. |
 
 ## Superseded
 (없음)
