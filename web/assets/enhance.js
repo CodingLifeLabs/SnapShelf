@@ -1,7 +1,29 @@
 // SnapShelf landing enhancement — scroll-triggered reveals with a tiny
-// IntersectionObserver. Progressive only: the page is complete without JS.
+// IntersectionObserver, plus latest-release link resolution. Progressive
+// only: the page is complete without JS.
 (function () {
   "use strict";
+
+  var REPO = "CodingLifeLabs/SnapShelf";
+
+  // Latest release DMG: point download CTAs at GitHub Releases (latest).
+  // Falls back silently to the anchor's existing href on any failure.
+  fetch("https://api.github.com/repos/" + REPO + "/releases/latest")
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (release) {
+      if (!release || !release.assets) return;
+      var dmg = release.assets.find(function (a) { return /\.dmg$/i.test(a.name); });
+      if (!dmg) return;
+      document.querySelectorAll('a[href="#download"]').forEach(function (a) {
+        if (a.classList.contains("btn-lg") || a.download !== undefined) {
+          a.setAttribute("href", dmg.browser_download_url);
+          a.removeAttribute("download");
+        }
+      });
+      var note = document.querySelector(".download-note");
+      if (note) { note.textContent = release.tag_name + " · " + new Date(release.published_at).toLocaleDateString("en-US", { month: "long", year: "numeric" }); }
+    })
+    .catch(function () { /* keep fallback href */ });
 
   var prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (prefersReduced || !("IntersectionObserver" in window)) return;
