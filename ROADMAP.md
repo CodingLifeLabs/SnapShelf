@@ -2,6 +2,9 @@
 
 > 10 Sprint. 각 Sprint = GENERATOR(구현+5Gate) → EVALUATOR(빌드/실행/검증) 사이클.
 > 마일스톤은 PRD.md §7 참조. Sprint 상세는 `docs/sprints/sprint-N.md`.
+>
+> **상태: 10/10 완료 (2026-08-16) — v0.1.0 Beta 공개.** GitHub Release + Pages 랜딩 배포 완료.
+> 이후 계획은 `docs/pmf.md` 검증 지표 기반으로 수립.
 
 ## Sprint 1 — Foundation & Capture→Shelf
 - 6 모듈 static framework + 앱 타깃 빌드, 메뉴바 상주, 스크린샷 폴더 감시(FSEvents),
