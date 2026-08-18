@@ -4,13 +4,13 @@
 
 ## 현재 등급
 
-- **상태**: 🟢 전체 10 스프린트 완료 · v0.1.0 Beta 공개 (EVAL PASS) — 로드맵 완주
-- **커버리지**: 87.5% line (목표 ≥80% ✅) — Config 90.0 · Repo 92.3 · Runtime 85.1 · Service 85.6 · Types 98.2
+- **상태**: 🟢 Sprint 11 완료 (실제 스크린샷 폴더 감시, ADR-0011) — EVAL PASS. v0.1.1 릴리스 대기
+- **커버리지**: Config 85.8 · Repo 92.3 · Runtime 86.5 · Service 85.6 · Types 98.2 (전 ≥80% ✅)
 - **레이어 위반**: 0건 (Gate 1)
-- **빌드**: 성공 (경고 0) — Debug + Release(ad-hoc · Hardened Runtime)
-- **테스트**: 177/177 통과
-- **배포**: GitHub Release v0.1.0 (SnapShelf-0.1.0.dmg 2.1MB + SHA-256) · Pages 랜딩
-- **비고**: 공증(Developer ID)은 ADR-0010 사용자 게이트 대기 — 인증서 확보 시 4단계 절차 실행
+- **빌드**: 성공 — Debug
+- **테스트**: 194/194 통과
+- **배포**: GitHub Release v0.1.0 (SnapShelf-0.1.0.dmg 2.1MB + SHA-256) · Pages 랜딩(상대경로 수정+enhance.js 재작성 반영)
+- **비고**: v0.1.1 DMG 빌드는 사용자 확인 후 ADR-0010 절차로 진행
 
 ## 5개 게이트 (네이티브 Swift 적응)
 
