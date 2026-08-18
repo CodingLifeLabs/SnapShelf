@@ -5,6 +5,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Dates are Asia/S
 
 ## [Unreleased]
 
+## [0.1.1] — 2026-08-18
+
 ### Added — Sprint 11: real screenshot folder watching (ADR-0011)
 - ScreenshotFolderSource protocol + DefaultScreenshotFolderSource:
   resolves `com.apple.screencapture location` → ~/Desktop → ~/Pictures/Screenshots
