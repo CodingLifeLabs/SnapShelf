@@ -4,13 +4,13 @@
 
 ## 현재 등급
 
-- **상태**: 🟢 Sprint 11 완료 (실제 스크린샷 폴더 감시, ADR-0011) — EVAL PASS. v0.1.1 릴리스 대기
+- **상태**: 🟢 Sprint 11 완료 (실제 스크린샷 폴더 감시, ADR-0011) — EVAL PASS. v0.1.1 출시 완료 (2026-08-18)
 - **커버리지**: Config 85.8 · Repo 92.3 · Runtime 86.5 · Service 85.6 · Types 98.2 (전 ≥80% ✅)
 - **레이어 위반**: 0건 (Gate 1)
-- **빌드**: 성공 — Debug
+- **빌드**: 성공 — Debug + Release (ad-hoc, Hardened Runtime)
 - **테스트**: 194/194 통과
-- **배포**: GitHub Release v0.1.0 (SnapShelf-0.1.0.dmg 2.1MB + SHA-256) · Pages 랜딩(상대경로 수정+enhance.js 재작성 반영)
-- **비고**: v0.1.1 DMG 빌드는 사용자 확인 후 ADR-0010 절차로 진행
+- **배포**: GitHub Release v0.1.1 (SnapShelf-0.1.1.dmg 2.2MB + SHA-256) · Pages 랜딩(상대경로 수정+enhance.js 재작성 반영)
+- **비고**: 다음 신규 기능은 신규 PLANNER 사이클부터
 
 ## 5개 게이트 (네이티브 Swift 적응)
 
