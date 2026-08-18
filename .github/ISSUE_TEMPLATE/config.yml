@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discussions
+    url: https://github.com/CodingLifeLabs/SnapShelf/discussions
+    about: Questions, usage tips, and screenshot workflows — anything that is not a bug or a feature request
