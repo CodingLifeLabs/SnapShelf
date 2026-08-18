@@ -14,11 +14,11 @@
       if (!release || !release.assets) return;
       var dmg = release.assets.find(function (a) { return /\.dmg$/i.test(a.name); });
       if (!dmg) return;
-      document.querySelectorAll('a[href="#download"]').forEach(function (a) {
-        if (a.classList.contains("btn-lg") || a.download !== undefined) {
-          a.setAttribute("href", dmg.browser_download_url);
-          a.removeAttribute("download");
-        }
+      // Hero/header CTAs link to #download; the final button already targets
+      // releases/latest — rewrite every download-intent anchor to the DMG asset.
+      document.querySelectorAll('a[href="#download"], a.btn-lg[href*="releases"]').forEach(function (a) {
+        a.setAttribute("href", dmg.browser_download_url);
+        a.removeAttribute("download");
       });
       var note = document.querySelector(".download-note");
       if (note) { note.textContent = release.tag_name + " · " + new Date(release.published_at).toLocaleDateString("en-US", { month: "long", year: "numeric" }); }

@@ -1,5 +1,6 @@
 import SwiftUI
 import SnapShelfConfig
+import SnapShelfRuntime
 import SnapShelfTypes
 
 // Sprint 8: six-tab settings window (Information Architecture §1).
@@ -7,16 +8,19 @@ import SnapShelfTypes
 
 struct SettingsView: View {
     @State private var model: SettingsModel
+    /// Live watch states from the shelf model; empty in previews/tests.
+    @State private var folderStates: [FolderWatchState]
 
-    init(model: SettingsModel) {
+    init(model: SettingsModel, folderStates: [FolderWatchState] = []) {
         self.model = model
+        self.folderStates = folderStates
     }
 
     var body: some View {
         TabView {
             GeneralSettingsTab(settings: $model.settings)
                 .tabItem { Label("General", systemImage: "gearshape") }
-            CaptureSettingsTab(model: model)
+            CaptureSettingsTab(model: model, folderStates: folderStates)
                 .tabItem { Label("Capture & Folders", systemImage: "folder") }
             OCRSettingsTab(settings: $model.settings)
                 .tabItem { Label("OCR & Search", systemImage: "text.magnifyingglass") }
@@ -75,11 +79,45 @@ private struct GeneralSettingsTab: View {
 
 private struct CaptureSettingsTab: View {
     @State var model: SettingsModel
+    /// Live watch states from the shelf model (nil in previews/tests).
+    var folderStates: [FolderWatchState] = []
 
     var body: some View {
         Form {
             Toggle("Organize screenshots into Library", isOn: $model.settings.organizeIntoLibrary)
             Toggle("Organize screen recordings", isOn: $model.settings.organizeRecordings)
+            Section("Watched screenshot folders") {
+                ForEach(folderStates) { state in
+                    HStack {
+                        Image(systemName: state.state == .watching ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                            .foregroundStyle(state.state == .watching ? .green : .orange)
+                            .accessibilityLabel(state.state == .watching ? "Watching" : "Needs permission")
+                        Text(state.path)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                        Spacer()
+                        if isUserFolder(state.path) {
+                            Button("Remove") { model.removeWatchedFolder(state.path) }
+                                .controlSize(.small)
+                        }
+                    }
+                }
+                if folderStates.isEmpty {
+                    Text("No folders watching yet — check permission prompts.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+                if folderStates.contains(where: { $0.state == .denied }) {
+                    Label(
+                        "A folder was denied. Allow SnapShelf in System Settings → Privacy & Security "
+                            + "→ Files and Folders, then reopen Settings.",
+                        systemImage: "lock.shield"
+                    )
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                }
+                Button("Add Folder…") { chooseFolder() }
+            }
             Section("Locations") {
                 pathRow("Inbox", model.paths.inboxDirectory)
                 pathRow("Library", model.paths.libraryDirectory)
@@ -87,6 +125,21 @@ private struct CaptureSettingsTab: View {
             }
         }
         .padding()
+    }
+
+    private func isUserFolder(_ path: String) -> Bool {
+        model.settings.watchedFolders.contains(ScreenshotFolders.normalized(path))
+    }
+
+    private func chooseFolder() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowsMultipleSelection = false
+        panel.message = "Choose a folder to watch for new screenshots"
+        if panel.runModal() == .OK, let url = panel.url {
+            _ = model.addWatchedFolder(url.path, appPaths: model.paths)
+        }
     }
 }
 

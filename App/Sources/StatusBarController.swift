@@ -52,4 +52,10 @@ public final class StatusBarController: NSObject {
     @objc private func handleOpenSettings() { onOpenSettings() }
     @objc private func handleSimulate() { onSimulateCapture() }
     @objc private func handleQuit() { onQuit() }
+
+    /// Screen hosting the status item — used to anchor the shelf panel.
+    public var screen: NSScreen? {
+        guard let window = statusItem.button?.window else { return nil }
+        return window.screen
+    }
 }

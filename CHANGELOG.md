@@ -5,6 +5,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Dates are Asia/S
 
 ## [Unreleased]
 
+### Added — Sprint 11: real screenshot folder watching (ADR-0011)
+- ScreenshotFolderSource protocol + DefaultScreenshotFolderSource:
+  resolves `com.apple.screencapture location` → ~/Desktop → ~/Pictures/Screenshots
+  → user-added folders (deduplicated, file-reference-suffix aware)
+- ShelfModel now runs one DirectoryWatcher per resolved folder plus the Inbox;
+  per-folder denied state (TCC) without stopping the others; statusMessage reports counts
+- AppSettings.watchedFolders persisted; Settings → Capture & Folders shows live folder
+  states with Add (NSOpenPanel) / Remove; app-owned paths rejected
+- ShelfPanelController: anchors to the status-item screen (was NSScreen.main — jumped
+  between displays across launches); panel height 460 → 492 (bottom 4px clipping fixed)
+- enhance.js: download CTA rewrite now also matches the btn-lg releases/latest anchor
+- 17 new unit tests; 194/194 pass. Coverage: Config 85.8 · Repo 92.3 · Runtime 86.5 · Service 85.6 · Types 98.2
+
+### Fixed — landing (2026-08-18)
+- Landing assets used absolute `/assets/*` paths which 404 on the project-site subpath —
+  rewrote to relative paths; brand link now targets the GitHub repo
+
 ### Added — Sprint 6: Library / Timeline / Collections UI
 - TimelineGrouper (day buckets, newest-first) + TimelineBucket (Service)
 - SnapCollection (Types) + CollectionModel (in-memory CRUD) (Runtime)

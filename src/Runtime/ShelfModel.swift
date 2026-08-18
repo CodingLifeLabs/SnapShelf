@@ -4,6 +4,24 @@ import SnapShelfConfig
 import SnapShelfRepo
 import SnapShelfService
 
+/// Per-folder watch outcome, surfaced to the Settings UI.
+public struct FolderWatchState: Sendable, Equatable, Identifiable {
+    public enum State: Sendable, Equatable {
+        case watching
+        case denied
+    }
+
+    public let path: String
+    public let state: State
+
+    public var id: String { path }
+
+    public init(path: String, state: State) {
+        self.path = path
+        self.state = state
+    }
+}
+
 /// Observable app state that ties the watcher -> pipeline -> repository together
 /// and drives the SwiftUI shelf surface. MainActor-isolated for UI safety.
 @MainActor
@@ -14,38 +32,53 @@ public final class ShelfModel {
     public private(set) var isWatching: Bool = false
     public private(set) var searchResults: [SearchResult] = []
     public private(set) var isSearching = false
+    /// ADR-0011: one entry per watched folder (screenshot folders + Inbox).
+    public private(set) var watchedFolderStates: [FolderWatchState] = []
 
     public let paths: AppPaths
     public let settings: ShelfSettings
 
     private let repository: any ShelfItemRepository
     private let pipeline: any IntakePipeline
-    private var watcher: (any ScreenshotWatcher)?
+    private let folderSource: any ScreenshotFolderSource
+    private var watchers: [any ScreenshotWatcher] = []
     private var stowWork: [UUID: Task<Void, Never>] = [:]
 
     public init(
         paths: AppPaths,
         settings: ShelfSettings = .default,
         repository: any ShelfItemRepository,
-        pipeline: any IntakePipeline
+        pipeline: any IntakePipeline,
+        folderSource: any ScreenshotFolderSource = DefaultScreenshotFolderSource()
     ) {
         self.paths = paths
         self.settings = settings
         self.repository = repository
         self.pipeline = pipeline
+        self.folderSource = folderSource
     }
 
     // MARK: - Lifecycle
 
-    public func bootstrap() async {
+    public func bootstrap(extraFolders: [String] = []) async {
         do {
             try paths.ensureExists()
             await load()
-            try await startWatcher()
-            statusMessage = "Watching \(paths.inboxDirectory.lastPathComponent)/"
+            await startWatchers(extraFolders: extraFolders)
+            statusMessage = watchStatusMessage()
         } catch {
             statusMessage = "Setup failed: \(error)"
         }
+    }
+
+    /// Human-readable watch state for the status surface.
+    public func watchStatusMessage() -> String {
+        let watching = watchedFolderStates.filter { $0.state == .watching }.count
+        let denied = watchedFolderStates.count - watching
+        if denied > 0 {
+            return "Watching \(watching) folder(s); \(denied) need permission (see Settings)"
+        }
+        return "Watching \(watching) folder(s)"
     }
 
     public func load() async {
@@ -191,14 +224,36 @@ public final class ShelfModel {
 
     // MARK: - Internals
 
-    private func startWatcher() async throws {
-        let dir = paths.inboxDirectory
-        let watcher = DirectoryWatcher(directory: dir) { [weak self] url in
-            Task { @MainActor [weak self] in await self?.ingest(url: url) }
+    /// ADR-0011: watch every resolved screenshot folder plus the app Inbox.
+    /// Each folder gets its own DirectoryWatcher; a folder that cannot be
+    /// opened (e.g. TCC denial) is marked `denied` without stopping the rest.
+    /// - Parameter extraFolders: user-added folders (from AppSettings.watchedFolders).
+    public func startWatchers(extraFolders: [String] = []) async {
+        let resolved = folderSource.watchedFolders(userFolders: extraFolders)
+            .filter { !ScreenshotFolders.isProtected($0, appPaths: paths) }
+        var dirs = resolved.map { URL(fileURLWithPath: $0, isDirectory: true) }
+        if !dirs.contains(where: { $0.path == paths.inboxDirectory.path }) {
+            dirs.append(paths.inboxDirectory)
         }
-        try await watcher.start()
-        self.watcher = watcher
-        isWatching = true
+
+        // Stop any previous watchers before switching folder sets.
+        for watcher in watchers { Task { await watcher.stop() } }
+        watchedFolderStates = []
+        var started: [any ScreenshotWatcher] = []
+        for dir in dirs {
+            let watcher = DirectoryWatcher(directory: dir) { [weak self] url in
+                Task { @MainActor [weak self] in await self?.ingest(url: url) }
+            }
+            do {
+                try await watcher.start()
+                started.append(watcher)
+                watchedFolderStates.append(FolderWatchState(path: dir.path, state: .watching))
+            } catch {
+                watchedFolderStates.append(FolderWatchState(path: dir.path, state: .denied))
+            }
+        }
+        watchers = started
+        isWatching = !started.isEmpty
     }
 
     private static func filenameTimestamp() -> String {

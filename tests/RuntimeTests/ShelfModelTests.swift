@@ -59,9 +59,32 @@ final class ShelfModelTests: XCTestCase {
     }
 
     private func makeEnv(settings: ShelfSettings = .default) throws -> ModelEnv {
+        try makeEnv(settings: settings, folderPaths: [])
+    }
+
+    /// Stub folder source resolving fixed paths — keeps tests off the real ~/Desktop.
+    private struct StubFolderSource: ScreenshotFolderSource {
+        let pathsToWatch: [String]
+        func watchedFolders(userFolders: [String]) -> [String] { pathsToWatch }
+    }
+
+    /// - Parameters:
+    ///   - folderPaths: resolved folders that will be created on disk.
+    ///   - uncreatedPaths: resolved folders deliberately left missing (denied path).
+    private func makeEnv(
+        settings: ShelfSettings = .default,
+        folderPaths: [String],
+        uncreatedPaths: [String] = []
+    ) throws -> ModelEnv {
         let dir = FileManager.default.temporaryDirectory
             .appendingPathComponent("snapshelf-model-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        for p in folderPaths {
+            try FileManager.default.createDirectory(
+                at: URL(fileURLWithPath: p, isDirectory: true),
+                withIntermediateDirectories: true
+            )
+        }
         let paths = AppPaths(
             supportDirectory: dir,
             inboxDirectory: dir.appendingPathComponent("Inbox", isDirectory: true),
@@ -75,7 +98,14 @@ final class ShelfModelTests: XCTestCase {
         try paths.ensureExists()
         let repo = FakeRepo()
         let pipeline = FakePipeline()
-        let model = ShelfModel(paths: paths, settings: settings, repository: repo, pipeline: pipeline)
+        let source = StubFolderSource(pathsToWatch: folderPaths + uncreatedPaths)
+        let model = ShelfModel(
+            paths: paths,
+            settings: settings,
+            repository: repo,
+            pipeline: pipeline,
+            folderSource: source
+        )
         return ModelEnv(model: model, repo: repo, pipeline: pipeline, dir: dir)
     }
 
@@ -241,5 +271,97 @@ final class ShelfModelTests: XCTestCase {
 
         XCTAssertEqual(env.model.visibleItems.count, 1)
         XCTAssertFalse(env.model.visibleItems.contains(where: { $0.id == firstId }))
+    }
+
+    // MARK: - Sprint 11: multi-folder watching (ADR-0011)
+
+    func test_bootstrap_watchesEveryResolvedFolderPlusInbox() async throws {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("watched-\(UUID().uuidString)", isDirectory: true)
+        let shots = dir.appendingPathComponent("Shots", isDirectory: true).path
+        let caps = dir.appendingPathComponent("Caps", isDirectory: true).path
+        let env = try makeEnv(folderPaths: [shots, caps])
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        await env.model.bootstrap()
+
+        XCTAssertTrue(env.model.isWatching)
+        let watchingPaths = env.model.watchedFolderStates
+            .filter { $0.state == .watching }
+            .map(\.path)
+        XCTAssertTrue(watchingPaths.contains(shots))
+        XCTAssertTrue(watchingPaths.contains(caps))
+        XCTAssertTrue(watchingPaths.contains(env.model.paths.inboxDirectory.path))
+        XCTAssertEqual(env.model.watchedFolderStates.count, 3)
+    }
+
+    func test_bootstrap_deniedFolderDoesNotStopOthers() async throws {
+        // Resolved-but-missing path → directory open fails → denied state.
+        let missing = "/definitely/not/a/real/place-\(UUID().uuidString)"
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("watched2-\(UUID().uuidString)", isDirectory: true)
+        let shots = dir.appendingPathComponent("Shots", isDirectory: true).path
+        let env = try makeEnv(folderPaths: [shots], uncreatedPaths: [missing])
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        await env.model.bootstrap()
+
+        // Inbox still watches even though one folder was denied.
+        XCTAssertTrue(env.model.isWatching)
+        XCTAssertEqual(
+            env.model.watchedFolderStates.first { $0.path == missing }?.state,
+            .denied
+        )
+        XCTAssertTrue(env.model.statusMessage.contains("permission"))
+    }
+
+    func test_bootstrap_withoutSourcedFoldersStillWatchesInbox() async throws {
+        let env = try makeEnv(folderPaths: [])
+        defer { try? FileManager.default.removeItem(at: env.dir) }
+
+        await env.model.bootstrap()
+
+        XCTAssertTrue(env.model.isWatching)
+        XCTAssertEqual(
+            env.model.watchedFolderStates.map(\.path),
+            [env.model.paths.inboxDirectory.path]
+        )
+    }
+
+    func test_startWatchers_restartsProtectsAgainstAppOwnedPaths() async throws {
+        let env = try makeEnv(folderPaths: [])
+        defer { try? FileManager.default.removeItem(at: env.dir) }
+        let inbox = env.model.paths.inboxDirectory.path
+        let nested = inbox + "/nested"
+
+        await env.model.startWatchers(extraFolders: [nested])
+
+        // The Inbox appears once — the nested app-owned path must not add a second watcher.
+        XCTAssertEqual(
+            env.model.watchedFolderStates.filter { $0.path == inbox }.count, 1
+        )
+        XCTAssertFalse(env.model.watchedFolderStates.contains(where: { $0.path == nested }))
+    }
+
+    func test_realFileInWatchedFolderFlowsThroughPipeline() async throws {
+        // End-to-end: a file dropped into a watched (non-Inbox) folder gets ingested.
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("e2e-\(UUID().uuidString)", isDirectory: true)
+        let shots = dir.appendingPathComponent("Shots", isDirectory: true).path
+        let env = try makeEnv(folderPaths: [shots])
+        defer { try? FileManager.default.removeItem(at: dir) }
+        await env.model.bootstrap()
+
+        let png = URL(fileURLWithPath: shots).appendingPathComponent("real-capture.png")
+        try PlaceholderImage.pngData(width: 10, height: 10).write(to: png)
+
+        // Watcher fires async; poll briefly for the item to surface.
+        for _ in 0..<40 where !env.model.surfaced.contains(where: { $0.sourceURL == png }) {
+            try await Task.sleep(nanoseconds: 50_000_000)
+        }
+        XCTAssertTrue(
+            env.model.surfaced.contains(where: { $0.sourceURL == png }),
+            "file in watched folder should surface on the shelf"
+        )
     }
 }

@@ -27,6 +27,8 @@ public struct AppSettings: Sendable, Equatable, Codable {
     // Capture & Folders
     public var organizeIntoLibrary: Bool
     public var organizeRecordings: Bool
+    /// User-added watch folders (absolute paths). App-owned paths are rejected (ADR-0011).
+    public var watchedFolders: [String]
 
     // OCR & Search
     public var ocrEnabled: Bool
@@ -49,6 +51,7 @@ public struct AppSettings: Sendable, Equatable, Codable {
         shelfSettings: ShelfSettings = .default,
         organizeIntoLibrary: Bool = true,
         organizeRecordings: Bool = true,
+        watchedFolders: [String] = [],
         ocrEnabled: Bool = true,
         ocrLanguages: [String] = ["en-US", "ko-KR"],
         aiProviderID: String = "foundation-models",
@@ -62,6 +65,7 @@ public struct AppSettings: Sendable, Equatable, Codable {
         self.shelfSettings = shelfSettings
         self.organizeIntoLibrary = organizeIntoLibrary
         self.organizeRecordings = organizeRecordings
+        self.watchedFolders = watchedFolders
         self.ocrEnabled = ocrEnabled
         self.ocrLanguages = ocrLanguages
         self.aiProviderID = aiProviderID

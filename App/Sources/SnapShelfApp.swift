@@ -67,20 +67,37 @@ final class SnapShelfAppDelegate: NSObject, NSApplicationDelegate {
         self.libraryController = libraryController
 
         let settingsModel = SettingsModel(store: AppSettingsStore(), paths: paths)
-        let settingsController = SettingsWindowController(model: settingsModel)
+        let settingsController = SettingsWindowController(
+            model: settingsModel,
+            folderStates: model.watchedFolderStates
+        )
         self.settingsController = settingsController
 
+        // Settings edits re-resolve the watched folders (ADR-0011).
+        settingsModel.onFoldersChanged = { [weak model, weak settingsModel] in
+            guard let model, let settingsModel else { return }
+            Task { @MainActor in
+                await model.startWatchers(extraFolders: settingsModel.settings.watchedFolders)
+            }
+        }
+
         statusBarController = StatusBarController(
-            onOpenShelf: { [weak panel] in panel?.show() },
+            onOpenShelf: { [weak panel, weak statusBarController] in
+                panel?.show(on: statusBarController?.screen)
+            },
             onOpenLibrary: { [weak libraryController] in libraryController?.show() },
             onOpenSettings: { [weak settingsController] in settingsController?.show() },
             onSimulateCapture: { [weak model] in _ = model?.simulateCapture() },
             onQuit: { NSApp.terminate(nil) }
         )
 
-        Task { @MainActor in await model.bootstrap() }
-        // Show the shelf on launch so the surface is immediately visible (and screenshot-able).
-        panel.show()
+        // Bootstrap with the user's watch folders (ADR-0011). Settings edits re-run this.
+        let folders = settingsModel.settings.watchedFolders
+        Task { @MainActor in
+            await model.bootstrap(extraFolders: folders)
+            // Show the shelf on launch anchored to the status item's screen.
+            panel.show(on: self.statusBarController?.screen)
+        }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {

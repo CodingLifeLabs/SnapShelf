@@ -16,6 +16,7 @@
 | ADR-0007 | LSUIElement accessory + NSPanel Shelf | Accepted | Dock 없는 메뉴바 앱. Shelf 는 `.nonactivatingPanel`(포커스 탈취 없음) — 핵심 UX. |
 | ADR-0008 | 시스템 SQLite3 유지 | Accepted | Sprint 3에서 채택 — GRDB 대비 의존성 0, FTS5 포함. 복잡도 증가 시 재검토. |
 | ADR-0010 | 공증/배포 파이프라인 | Accepted | Release=ad-hoc+Hardened Runtime, DMG+체크섬 자동. 공증 제출은 사용자 확인 게이트. `adr-0010-notarization-deploy.md` |
+| ADR-0011 | 실제 스크린샷 폴더 감시 | Accepted | 다중 폴더 DirectoryWatcher(시스템 설정→Desktop→Pictures/Screenshots→Inbox+사용자). 비샌드박스라 TCC 프롬프트만으로 접근. `adr-0011-real-folder-watch.md` |
 
 ## Proposed (결정 보류 — 해당 Sprint 에서 확정)
 
