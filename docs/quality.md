@@ -31,7 +31,8 @@
 - ~~(Sprint 9) 랜딩 페이지~~ → `web/` + Pages 배포 완료
 - (보류) ADR-0009 임베딩 벡터 검색 — v2 검토
 - (게이트 대기) Apple 공증 — Developer ID 인증서 확보 시 ADR-0010 4단계 절차 (사용자 확인 필수)
-- (대화형 환경) Shelf 패널·애니메이션 체감 확인, XCUITest 도입 여부
+- ~~(대화형 환경) Shelf 패널·애니메이션 체감 확인~~ → 2026-08-18 대화형 EVAL 완료: `docs/sprints/interactive-eval-2026-08-18.md` — 조건부 PASS. **P0-2 실제 스크린샷 폴더(Desktop 등) 미감시가 CRITICAL로 확인됨**(⌘⇧4 캡처가 앱에 반영 안 됨) + enhance.js DMG 재작성 데드코드 + 패널 배치(포커스 스크린·4px 클리핑). v0.1.1 최우선 후보.
+- (대기) XCUITest 도입 여부 — 이번 EVAL은 osascript+screencapture로 대체 수행
 
 ## 테스트 전략 (macOS 네이티브)
 
