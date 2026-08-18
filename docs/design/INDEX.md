@@ -23,6 +23,7 @@
 | ADR | 제목 | 상태 | 검토 시점 | 결정 기준 |
 |-----|------|------|-----------|-----------|
 | ADR-0009 | 임베딩 기반 벡터 검색 도입 | Proposed | v2 | FTS5+LLM 재랭킹(v1) 대비 품질/비용. sqlite-vec 또는 로컬 ONNX. |
+| ADR-0012 | 로컬 사용 통계 — 텔레메트리 없는 PMF 지표 | Proposed | Sprint 12 | 이벤트(종류+타임스탬프만)를 JSON-lines 로컬 파일에 기록, Privacy 탭 셀프 리포트. 원격 전송 영구 제외. `adr-0012-local-usage-stats.md` |
 
 ## Superseded
 (없음)

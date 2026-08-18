@@ -88,3 +88,22 @@ Sukurini 가 "잠깐 보관(Shelf)" UX 로 출발점을 만들었다면, SnapShe
 | 8 | 설정/프라이버시/URL/Dev Mode | 차별화 완성 |
 | 9 | 랜딩 + 브랜드 | 다운로드 전환 |
 | 10 | 폴리시/애니메이션/공증 | 배포 |
+| 11 | 실제 폴더 감시 (ADR-0011) | 진짜 캡처 |
+| 12 | 로컬 사용 통계 (아래 "기능 확장 — 로컬 사용 통계" 참조) | 셀프 리포트 PMF 지표 |
+
+## 기능 확장 — 로컬 사용 통계 (Sprint 12, 2026-08-18 추가)
+
+### 목적
+PMF 검증 지표(핵심 루프 반복 횟수, "다시 찾기" 성공률)를 **텔레메트리 없이**
+사용자가 스스로 확인할 수 있게 한다. 모든 데이터는 기기 내 로컬 파일 — 전송 0.
+
+### 설계 결정 (ADR-0012)
+- `UsageEventKind` enum: `captured / searched / searchHit / copied / pinned / stowed`
+- `UsageStatsLog` actor (Runtime): PrivacyLog 과 동일한 JSON-lines 파일 패턴 재사용
+- 집계는 순수 함수 `UsageStatsSummary.compute(events:)` (Service) — 테스트 용이
+- 표시: Settings → Privacy 탭 하단 "Your usage (local only)" 섹션. 신규 탭 아님
+- 이벤트 기록 자체는 별도 옵트인 없이 상시(파일은 로컬 전용, PrivacyLog 와 동일 보안 수준)
+
+### PMF 필터 (이 확장)
+- 리텐션 임팩트 ✅ (지표 없이는 PMF 판정 불가) · 습관 형성 △ (셀프 리포트) · Agentic ✅ (자동 집계)
+→ 2/3 충족. 통과. 단, v2 (원격 익명 전송) 는 별도 옵트인·ADR 필요 — Scope Out.
