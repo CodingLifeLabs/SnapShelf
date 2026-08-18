@@ -45,7 +45,15 @@ final class SnapShelfAppDelegate: NSObject, NSApplicationDelegate {
         )
         let model = ShelfModel(paths: paths, repository: repository, pipeline: pipeline)
         self.model = model
+        wireWindows(model: model, repository: repository, paths: paths)
+    }
 
+    /// Build the panel/library/settings/status-bar controllers and start watching.
+    private func wireWindows(
+        model: ShelfModel,
+        repository: any ShelfItemRepository,
+        paths: AppPaths
+    ) {
         let panel = ShelfPanelController { ShelfView(model: model) }
         panelController = panel
 
@@ -96,6 +104,10 @@ final class SnapShelfAppDelegate: NSObject, NSApplicationDelegate {
         Task { @MainActor in
             await model.bootstrap(extraFolders: folders)
             // Show the shelf on launch anchored to the status item's screen.
+            // The status window frame is not laid out at launch — wait for it.
+            for _ in 0..<10 where self.statusBarController?.screen == nil {
+                try? await Task.sleep(nanoseconds: 100_000_000)
+            }
             panel.show(on: self.statusBarController?.screen)
         }
     }

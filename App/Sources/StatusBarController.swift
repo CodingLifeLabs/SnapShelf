@@ -54,8 +54,10 @@ public final class StatusBarController: NSObject {
     @objc private func handleQuit() { onQuit() }
 
     /// Screen hosting the status item — used to anchor the shelf panel.
+    /// Status-bar windows report a nil `screen` until laid out, so match the
+    /// frame against the screens list instead.
     public var screen: NSScreen? {
-        guard let window = statusItem.button?.window else { return nil }
-        return window.screen
+        guard let frame = statusItem.button?.window?.frame, frame.width > 0 else { return nil }
+        return NSScreen.screens.first { frame.intersects($0.frame) }
     }
 }
