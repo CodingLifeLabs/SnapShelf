@@ -19,6 +19,7 @@ final class AppPathsTests: XCTestCase {
         XCTAssertEqual(paths.clipboardHistoryFile.path, "/Users/test/Library/Application Support/SnapShelf/clipboard-history.json")
         XCTAssertEqual(paths.recordingsDirectory.path, "/Users/test/Library/Application Support/SnapShelf/Recordings")
         XCTAssertEqual(paths.privacyLogFile.path, "/Users/test/Library/Application Support/SnapShelf/privacy-log.jsonl")
+        XCTAssertEqual(paths.usageStatsFile.path, "/Users/test/Library/Application Support/SnapShelf/usage-stats.jsonl")
     }
 
     func test_make_isConsistentWithExplicitInit() {
@@ -32,7 +33,8 @@ final class AppPathsTests: XCTestCase {
             databaseFile: derived.databaseFile,
             clipboardHistoryFile: derived.clipboardHistoryFile,
             recordingsDirectory: derived.recordingsDirectory,
-            privacyLogFile: derived.privacyLogFile
+            privacyLogFile: derived.privacyLogFile,
+            usageStatsFile: derived.usageStatsFile
         )
         XCTAssertEqual(derived, explicit)
     }
@@ -51,7 +53,8 @@ final class AppPathsTests: XCTestCase {
             databaseFile: tmp.appendingPathComponent("index.sqlite", isDirectory: false),
             clipboardHistoryFile: tmp.appendingPathComponent("clipboard-history.json", isDirectory: false),
             recordingsDirectory: tmp.appendingPathComponent("Recordings", isDirectory: true),
-            privacyLogFile: tmp.appendingPathComponent("privacy-log.jsonl", isDirectory: false)
+            privacyLogFile: tmp.appendingPathComponent("privacy-log.jsonl", isDirectory: false),
+            usageStatsFile: tmp.appendingPathComponent("usage-stats.jsonl", isDirectory: false)
         )
         defer { try? FileManager.default.removeItem(at: tmp) }
 
@@ -75,7 +78,8 @@ final class AppPathsTests: XCTestCase {
             databaseFile: tmp.appendingPathComponent("index.sqlite", isDirectory: false),
             clipboardHistoryFile: tmp.appendingPathComponent("clipboard-history.json", isDirectory: false),
             recordingsDirectory: tmp.appendingPathComponent("Recordings", isDirectory: true),
-            privacyLogFile: tmp.appendingPathComponent("privacy-log.jsonl", isDirectory: false)
+            privacyLogFile: tmp.appendingPathComponent("privacy-log.jsonl", isDirectory: false),
+            usageStatsFile: tmp.appendingPathComponent("usage-stats.jsonl", isDirectory: false)
         )
         defer { try? FileManager.default.removeItem(at: tmp) }
 

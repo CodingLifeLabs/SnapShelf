@@ -2,6 +2,7 @@ import Foundation
 import Observation
 import SnapShelfConfig
 import SnapShelfRuntime
+import SnapShelfService
 import SnapShelfTypes
 
 // Sprint 8: settings runtime. Loads the persisted snapshot, exposes it for
@@ -16,6 +17,11 @@ final class SettingsModel {
 
     private let store: AppSettingsStore
     let paths: AppPaths
+    /// Sprint 12 / ADR-0012: local-only usage counters for the Privacy tab.
+    private let usageLog: UsageStatsLog?
+
+    /// Aggregated usage shown under "Your usage (local only)". Nil until first load.
+    var usageSummary: UsageStatsSummary?
 
     /// Two-stage confirmation state for destructive actions.
     enum ResetStage: Equatable {
@@ -27,10 +33,33 @@ final class SettingsModel {
     /// Fired whenever watch folders change so the app can re-resolve watchers.
     var onFoldersChanged: (@MainActor () -> Void)?
 
-    init(store: AppSettingsStore = AppSettingsStore(), paths: AppPaths = .current()) {
+    init(
+        store: AppSettingsStore = AppSettingsStore(),
+        paths: AppPaths = .current(),
+        usageLog: UsageStatsLog? = nil
+    ) {
         self.store = store
         self.paths = paths
+        self.usageLog = usageLog
         self.settings = store.load()
+    }
+
+    // MARK: - Local usage stats (Sprint 12 / ADR-0012)
+
+    /// Load (or reload) the local usage counters; called when the Privacy tab appears.
+    func loadUsageSummary() async {
+        guard let usageLog else {
+            usageSummary = .empty
+            return
+        }
+        let events = await usageLog.events()
+        usageSummary = UsageStatsSummaryCalculator.summarize(events)
+    }
+
+    /// Privacy tab → Reset: delete every locally counted event.
+    func resetUsage() async {
+        await usageLog?.clear()
+        usageSummary = .empty
     }
 
     /// Re-read from disk (Advanced → Reload).

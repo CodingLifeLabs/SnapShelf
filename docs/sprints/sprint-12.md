@@ -66,3 +66,26 @@ PMF 검증 지표를 텔레메트리 없이 로컬에서만 수집·표시한다
 
 ## ADR
 `docs/design/adr-0012-local-usage-stats.md` — 로컬 전용 통계, 텔레메트리 영구 제외, PrivacyLog 패턴 재사용 결정
+
+## GENERATOR 자가 검증 결과
+실행 일시: 2026-08-19 11:36 (KST)
+
+| Gate | 항목 | 결과 | 비고 |
+|------|------|------|------|
+| 1 | 레이어 의존성 | ✅ PASS | 위반 0건 (파일 59) |
+| 2 | 빌드 | ✅ PASS | xcodebuild Debug 오류 0건 |
+| 3 | SwiftLint --strict | ✅ PASS | violation 0건 (94 파일) |
+| 4 | 테스트 커버리지 | ✅ PASS | 213/213 통과 · Config 86.0 / Repo 92.3 / Runtime 87.0 / Service 86.0 / Types 98.4 |
+| 5 | gen:project + 빌드 재확인 | ✅ PASS | 신규 파일 7종 반영 확인 |
+
+### 구현 파일 (커밋 기준)
+- `src/Types/UsageStats.swift` — UsageEventKind(6종) + UsageEvent
+- `src/Config/AppPaths.swift` — `usageStatsFile` 경로 추가 (`usage-stats.jsonl`)
+- `src/Runtime/UsageStatsLog.swift` — actor, JSON-lines, maxEvents 2000
+- `src/Runtime/ShelfModel.swift` — ingest/togglePin/stow/runSearch 훅 + `recordUsage(_:)` (주입식, nil=비활성)
+- `src/Service/UsageStatsSummary.swift` — 순수 집계 + `eventsLast(days:)`
+- `App/Sources/Shelf/ShelfView.swift` — onCopyImage 성공 시 `.copied`
+- `App/Sources/Settings/SettingsModel.swift` — `usageSummary` 로드/리셋
+- `App/Sources/Settings/SettingsView.swift` — Privacy 탭 "Your usage (local only)" 섹션
+- `App/Sources/SnapShelfApp.swift` — UsageStatsLog 생성·주입
+- Tests 3파일 신규 (4+7+8=19개) + 기존 AppPaths 테스트 3곳 시그니처 갱신

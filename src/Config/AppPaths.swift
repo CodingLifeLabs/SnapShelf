@@ -18,6 +18,8 @@ public struct AppPaths: Sendable, Equatable {
     public let clipboardHistoryFile: URL
     public let recordingsDirectory: URL
     public let privacyLogFile: URL
+    /// Sprint 12 / ADR-0012: local-only usage counters (never leaves the Mac).
+    public let usageStatsFile: URL
 
     public init(
         supportDirectory: URL,
@@ -27,7 +29,8 @@ public struct AppPaths: Sendable, Equatable {
         databaseFile: URL,
         clipboardHistoryFile: URL,
         recordingsDirectory: URL,
-        privacyLogFile: URL
+        privacyLogFile: URL,
+        usageStatsFile: URL
     ) {
         self.supportDirectory = supportDirectory
         self.inboxDirectory = inboxDirectory
@@ -37,6 +40,7 @@ public struct AppPaths: Sendable, Equatable {
         self.clipboardHistoryFile = clipboardHistoryFile
         self.recordingsDirectory = recordingsDirectory
         self.privacyLogFile = privacyLogFile
+        self.usageStatsFile = usageStatsFile
     }
 
     /// Derive all paths from a home directory.
@@ -53,7 +57,8 @@ public struct AppPaths: Sendable, Equatable {
             databaseFile: support.appendingPathComponent("index.sqlite", isDirectory: false),
             clipboardHistoryFile: support.appendingPathComponent("clipboard-history.json", isDirectory: false),
             recordingsDirectory: support.appendingPathComponent("Recordings", isDirectory: true),
-            privacyLogFile: support.appendingPathComponent("privacy-log.jsonl", isDirectory: false)
+            privacyLogFile: support.appendingPathComponent("privacy-log.jsonl", isDirectory: false),
+            usageStatsFile: support.appendingPathComponent("usage-stats.jsonl", isDirectory: false)
         )
     }
 

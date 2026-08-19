@@ -43,16 +43,23 @@ final class SnapShelfAppDelegate: NSObject, NSApplicationDelegate {
             // Smart Folder organizing within the app-owned library (TCC-free).
             organizer: Organizer(libraryRoot: paths.libraryDirectory)
         )
-        let model = ShelfModel(paths: paths, repository: repository, pipeline: pipeline)
+        let usageLog = UsageStatsLog(fileURL: paths.usageStatsFile)
+        let model = ShelfModel(
+            paths: paths,
+            repository: repository,
+            pipeline: pipeline,
+            usageLog: usageLog
+        )
         self.model = model
-        wireWindows(model: model, repository: repository, paths: paths)
+        wireWindows(model: model, repository: repository, paths: paths, usageLog: usageLog)
     }
 
     /// Build the panel/library/settings/status-bar controllers and start watching.
     private func wireWindows(
         model: ShelfModel,
         repository: any ShelfItemRepository,
-        paths: AppPaths
+        paths: AppPaths,
+        usageLog: UsageStatsLog
     ) {
         let panel = ShelfPanelController { ShelfView(model: model) }
         panelController = panel
@@ -74,7 +81,7 @@ final class SnapShelfAppDelegate: NSObject, NSApplicationDelegate {
         )
         self.libraryController = libraryController
 
-        let settingsModel = SettingsModel(store: AppSettingsStore(), paths: paths)
+        let settingsModel = SettingsModel(store: AppSettingsStore(), paths: paths, usageLog: usageLog)
         let settingsController = SettingsWindowController(
             model: settingsModel,
             folderStates: model.watchedFolderStates

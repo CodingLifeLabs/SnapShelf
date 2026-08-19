@@ -4,13 +4,13 @@
 
 ## 현재 등급
 
-- **상태**: 🟢 Sprint 11 완료 (실제 스크린샷 폴더 감시, ADR-0011) — EVAL PASS. v0.1.1 출시 완료 (2026-08-18)
-- **커버리지**: Config 85.8 · Repo 92.3 · Runtime 86.5 · Service 85.6 · Types 98.2 (전 ≥80% ✅)
+- **상태**: 🟢 Sprint 12 GENERATOR 완료 (로컬 사용 통계, ADR-0012) — EVALUATOR 대기
+- **커버리지**: Config 86.0 · Repo 92.3 · Runtime 87.0 · Service 86.0 · Types 98.4 (전 ≥80% ✅)
 - **레이어 위반**: 0건 (Gate 1)
-- **빌드**: 성공 — Debug + Release (ad-hoc, Hardened Runtime)
-- **테스트**: 194/194 통과
+- **빌드**: 성공 — Debug (gen:project 후 신규 파일 반영 확인)
+- **테스트**: 213/213 통과 (기존 194 + Sprint 12 신규 19)
 - **배포**: GitHub Release v0.1.1 (SnapShelf-0.1.1.dmg 2.2MB + SHA-256) · Pages 랜딩(상대경로 수정+enhance.js 재작성 반영)
-- **비고**: 다음 신규 기능은 신규 PLANNER 사이클부터
+- **비고**: v0.1.1 출시 완료 (2026-08-18). Sprint 12는 로컬 전용 통계 — 배포 없이 EVAL 진행
 
 ## 5개 게이트 (네이티브 Swift 적응)
 

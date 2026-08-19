@@ -152,7 +152,11 @@ struct ShelfView: View {
                     reduceMotion: reduceMotion,
                     onPin: { model.togglePin(id: item.id) },
                     onStow: { model.stow(id: item.id) },
-                    onCopyImage: { clipboard.copyImage(at: item.sourceURL) }
+                    onCopyImage: {
+                        if clipboard.copyImage(at: item.sourceURL) {
+                            model.recordUsage(.copied)
+                        }
+                    }
                 )
                 .transition(itemTransition)
             }

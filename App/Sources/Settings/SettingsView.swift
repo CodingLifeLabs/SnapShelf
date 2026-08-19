@@ -197,13 +197,48 @@ private struct PrivacySettingsTab: View {
         Form {
             Toggle("Detect browser tab URL (opt-in, AppleScript)", isOn: $model.settings.urlDetectionEnabled)
             Toggle("Keep a local transfer log", isOn: $model.settings.privacyLogEnabled)
+            Section("Your usage (local only)") {
+                usageSection
+            }
             Section("Data locations") {
                 pathRow("Database", model.paths.databaseFile)
                 pathRow("Clipboard history", model.paths.clipboardHistoryFile)
                 pathRow("Transfer log", model.paths.privacyLogFile)
+                pathRow("Usage stats", model.paths.usageStatsFile)
             }
         }
         .padding()
+        .task { await model.loadUsageSummary() }
+    }
+
+    @ViewBuilder
+    private var usageSection: some View {
+        if let summary = model.usageSummary {
+            LabeledContent("Captured") { Text("\(summary.totalCaptured)") }
+            LabeledContent("Searches") { Text("\(summary.totalSearches)") }
+            LabeledContent("Search hit rate") { Text(hitRate(summary.searchHitRate)) }
+            LabeledContent("Copied") { Text("\(summary.totalCopied)") }
+            LabeledContent("Active days") { Text("\(summary.activeDays)") }
+        } else {
+            Text("Loading…")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
+        Label(
+            "This never leaves your Mac. Counts captures, searches and copies — no screenshots, names, or text.",
+            systemImage: "lock"
+        )
+        .font(.footnote)
+        .foregroundStyle(.secondary)
+        Button("Reset Usage Stats", role: .destructive) {
+            Task { await model.resetUsage() }
+        }
+        .controlSize(.small)
+    }
+
+    private func hitRate(_ rate: Double?) -> String {
+        guard let rate else { return "—" }
+        return "\(Int((rate * 100).rounded()))%"
     }
 }
 

@@ -41,6 +41,9 @@ public final class ShelfModel {
     private let repository: any ShelfItemRepository
     private let pipeline: any IntakePipeline
     private let folderSource: any ScreenshotFolderSource
+    /// Sprint 12 / ADR-0012: local-only usage counters. Optional so existing
+    /// callers/tests stay source-compatible; nil = counting disabled.
+    private let usageLog: UsageStatsLog?
     private var watchers: [any ScreenshotWatcher] = []
     private var stowWork: [UUID: Task<Void, Never>] = [:]
 
@@ -49,13 +52,15 @@ public final class ShelfModel {
         settings: ShelfSettings = .default,
         repository: any ShelfItemRepository,
         pipeline: any IntakePipeline,
-        folderSource: any ScreenshotFolderSource = DefaultScreenshotFolderSource()
+        folderSource: any ScreenshotFolderSource = DefaultScreenshotFolderSource(),
+        usageLog: UsageStatsLog? = nil
     ) {
         self.paths = paths
         self.settings = settings
         self.repository = repository
         self.pipeline = pipeline
         self.folderSource = folderSource
+        self.usageLog = usageLog
     }
 
     // MARK: - Lifecycle
@@ -99,6 +104,7 @@ public final class ShelfModel {
             surfaced.insert(item, at: 0)
             enforceHistoryLimit()
             scheduleAutoStow(for: item.id)
+            recordUsage(.captured)
         } catch {
             statusMessage = "Ingest failed: \(error)"
         }
@@ -124,7 +130,11 @@ public final class ShelfModel {
         var item = surfaced[index]
         item.status = item.status == .pinned ? .resting : .pinned
         surfaced[index] = item
-        if item.status == .pinned { stowWork[id]?.cancel(); stowWork[id] = nil }
+        if item.status == .pinned {
+            stowWork[id]?.cancel()
+            stowWork[id] = nil
+            recordUsage(.pinned)
+        }
         Task { try? await repository.upsert(item) }
     }
 
@@ -135,6 +145,7 @@ public final class ShelfModel {
         var item = surfaced[index]
         item.status = .stowed
         surfaced[index] = item
+        recordUsage(.stowed)
         Task { try? await repository.upsert(item) }
     }
 
@@ -167,6 +178,8 @@ public final class ShelfModel {
         defer { isSearching = false }
         do {
             searchResults = try await repository.searchExcerpts(trimmed, limit: 50)
+            recordUsage(.searched)
+            if !searchResults.isEmpty { recordUsage(.searchHit) }
         } catch {
             statusMessage = "Search failed: \(error)"
         }
@@ -223,6 +236,12 @@ public final class ShelfModel {
     }
 
     // MARK: - Internals
+
+    /// Sprint 12 / ADR-0012: count one usage step locally (no-op when disabled).
+    public func recordUsage(_ kind: UsageEventKind) {
+        guard let usageLog else { return }
+        Task { await usageLog.record(kind: kind) }
+    }
 
     /// ADR-0011: watch every resolved screenshot folder plus the app Inbox.
     /// Each folder gets its own DirectoryWatcher; a folder that cannot be
