@@ -85,7 +85,14 @@ public actor DirectoryWatcher: ScreenshotWatcher {
     }
 
     private func filteredNames(_ names: [String]) -> [String] {
-        names.filter { fileExtensions.contains(fileExtension(of: $0)) }
+        // Sprint 13 / ADR-0013: skip dot-prefixed files — macOS `screencapture`
+        // writes ".Name.png" first and renames on completion; ingesting the
+        // temp file raced the writer and left OCR-less duplicate rows.
+        names.filter { !isDotFile($0) && fileExtensions.contains(fileExtension(of: $0)) }
+    }
+
+    private func isDotFile(_ name: String) -> Bool {
+        name.hasPrefix(".")
     }
 
     private func fileExtension(of name: String) -> String {

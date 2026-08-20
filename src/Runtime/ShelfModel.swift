@@ -36,7 +36,9 @@ public final class ShelfModel {
     public private(set) var watchedFolderStates: [FolderWatchState] = []
 
     public let paths: AppPaths
-    public let settings: ShelfSettings
+    /// Sprint 13 / ADR-0013: mutable so Settings edits can take effect at runtime;
+    /// updated only through `applyShelfSettings(_:)`.
+    public private(set) var settings: ShelfSettings
 
     private let repository: any ShelfItemRepository
     private let pipeline: any IntakePipeline
@@ -214,6 +216,22 @@ public final class ShelfModel {
             try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
             guard !Task.isCancelled else { return }
             self?.stow(id: id)
+        }
+    }
+
+    /// Sprint 13 / ADR-0013: apply a Settings edit to the live model.
+    /// Updates the snapshot, then reschedules resting items against the new
+    /// policy — existing resting items are re-armed with the new hover window;
+    /// when auto-stow is turned off every pending schedule is cancelled.
+    public func applyShelfSettings(_ newSettings: ShelfSettings) {
+        settings = newSettings
+        guard settings.autoStow else {
+            for (_, work) in stowWork { work.cancel() }
+            stowWork = [:]
+            return
+        }
+        for item in surfaced where item.status == .resting {
+            scheduleAutoStow(for: item.id)
         }
     }
 

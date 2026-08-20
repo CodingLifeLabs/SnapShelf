@@ -79,6 +79,14 @@ public actor FileShelfRepository: ShelfItemRepository {
         try persist()
     }
 
+    public func setOCRStatus(id: UUID, status: OCRStatus?) async throws {
+        try ensureLoaded()
+        guard var item = byID[id] else { return }
+        item.ocrStatus = status
+        byID[id] = item
+        try persist()
+    }
+
     public func setNote(id: UUID, text: String?) async throws {
         try ensureLoaded()
         guard var item = byID[id] else { return }

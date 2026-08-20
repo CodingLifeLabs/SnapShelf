@@ -27,6 +27,13 @@ public enum IntakeSupport {
         }
         return result
     }
+
+    /// Sprint 13 / ADR-0013: pure settle policy — the file is considered
+    /// settled once two consecutive size samples agree.
+    public static func isStable(sampling sizes: [Int]) -> Bool {
+        guard sizes.count >= 2 else { return false }
+        return sizes[sizes.count - 1] == sizes[sizes.count - 2]
+    }
 }
 
 public final class DefaultIntakePipeline: IntakePipeline {
@@ -36,6 +43,11 @@ public final class DefaultIntakePipeline: IntakePipeline {
     private let renameEnabled: Bool
     private let organizer: Organizer?
     private let clock: @Sendable () -> Date
+    /// Sprint 13 / ADR-0013: waits for the capture file to stop changing size
+    /// before OCR reads it (mid-write reads made Vision fail silently).
+    private let settleAttempts: Int
+    private let settleInterval: UInt64
+    private let sleep: @Sendable (UInt64) async -> Void
 
     public init(
         repository: any ShelfItemRepository,
@@ -43,7 +55,10 @@ public final class DefaultIntakePipeline: IntakePipeline {
         aiService: AIService? = nil,
         renameEnabled: Bool = false,
         organizer: Organizer? = nil,
-        clock: @escaping @Sendable () -> Date = { Date() }
+        clock: @escaping @Sendable () -> Date = { Date() },
+        settleAttempts: Int = 4,
+        settleIntervalNanos: UInt64 = 350_000_000,
+        sleep: (@Sendable (UInt64) async -> Void)? = nil
     ) {
         self.repository = repository
         self.ocrService = ocrService
@@ -51,9 +66,13 @@ public final class DefaultIntakePipeline: IntakePipeline {
         self.renameEnabled = renameEnabled
         self.organizer = organizer
         self.clock = clock
+        self.settleAttempts = max(2, settleAttempts)
+        self.settleInterval = settleIntervalNanos
+        self.sleep = sleep ?? { try? await Task.sleep(nanoseconds: $0) }
     }
 
     public func ingest(url: URL) async throws -> ShelfItem {
+        await settle(url: url)
         let original = url.lastPathComponent
         var item = ShelfItem(
             sourceURL: url,
@@ -64,9 +83,20 @@ public final class DefaultIntakePipeline: IntakePipeline {
         )
         try await repository.upsert(item)
         // OCR is best-effort: a failure must never lose the captured item.
-        if let ocr = ocrService, let text = try? await ocr.recognize(url), !text.isEmpty {
-            try await repository.setOCR(id: item.id, text: text)
-            item.ocrText = text
+        // Sprint 13: failures are recorded (`.failed`) instead of being swallowed.
+        if let ocr = ocrService {
+            do {
+                let text = try await ocr.recognize(url)
+                if !text.isEmpty {
+                    try await repository.setOCR(id: item.id, text: text)
+                    item.ocrText = text
+                    item.ocrStatus = .ok
+                    try? await repository.setOCRStatus(id: item.id, status: .ok)
+                }
+            } catch {
+                item.ocrStatus = .failed
+                try? await repository.setOCRStatus(id: item.id, status: .failed)
+            }
         }
         // AI rename is best-effort and opt-in; falls through silently on failure.
         if renameEnabled, let ai = aiService, let name = try? await ai.rename(item), !name.isEmpty {
@@ -78,5 +108,23 @@ public final class DefaultIntakePipeline: IntakePipeline {
         }
         try await repository.upsert(item)
         return item
+    }
+
+    /// Wait until the file size stops changing (or attempts run out).
+    /// The watcher fires on the first `.write` — often mid-capture.
+    private func settle(url: URL) async {
+        var sizes: [Int] = [fileSize(url)]
+        for _ in 0..<(settleAttempts - 1) {
+            await sleep(settleInterval)
+            sizes.append(fileSize(url))
+            if IntakeSupport.isStable(sampling: sizes) { return }
+        }
+    }
+
+    /// Fresh `stat` on every call — `URL.resourceValues` would return a cached
+    /// size, making consecutive probes compare stale values and settle early.
+    private func fileSize(_ url: URL) -> Int {
+        let attributes = try? FileManager.default.attributesOfItem(atPath: url.path)
+        return (attributes?[.size] as? Int) ?? 0
     }
 }

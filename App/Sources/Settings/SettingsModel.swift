@@ -12,7 +12,13 @@ import SnapShelfTypes
 @Observable
 final class SettingsModel {
     var settings: AppSettings {
-        didSet { store.save(settings) }
+        didSet {
+            store.save(settings)
+            // Sprint 13: surface shelf-behavior edits to the live model.
+            if oldValue.shelfSettings != settings.shelfSettings {
+                onShelfSettingsChanged?()
+            }
+        }
     }
 
     private let store: AppSettingsStore
@@ -32,6 +38,9 @@ final class SettingsModel {
 
     /// Fired whenever watch folders change so the app can re-resolve watchers.
     var onFoldersChanged: (@MainActor () -> Void)?
+    /// Sprint 13 / ADR-0013: fired whenever shelf behavior settings change so
+    /// the app can push them into the live ShelfModel.
+    var onShelfSettingsChanged: (@MainActor () -> Void)?
 
     init(
         store: AppSettingsStore = AppSettingsStore(),

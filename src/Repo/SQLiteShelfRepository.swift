@@ -73,6 +73,7 @@ public final class SQLiteShelfRepository: ShelfItemRepository, @unchecked Sendab
             category TEXT,
             status TEXT NOT NULL DEFAULT 'resting',
             ocr_text TEXT,
+            ocr_status TEXT,
             note TEXT
         );
         CREATE INDEX IF NOT EXISTS idx_items_captured ON shelf_items(captured_at DESC);
@@ -81,7 +82,7 @@ public final class SQLiteShelfRepository: ShelfItemRepository, @unchecked Sendab
             content,
             tokenize = 'porter unicode61 remove_diacritics 2'
         );
-        INSERT OR IGNORE INTO schema_meta(key, value) VALUES('version', '2');
+        INSERT OR IGNORE INTO schema_meta(key, value) VALUES('version', '3');
         """
 
     private func createSchema() throws {
@@ -89,12 +90,18 @@ public final class SQLiteShelfRepository: ShelfItemRepository, @unchecked Sendab
     }
 
     /// v1 -> v2: add the `note` column for AI/user notes (Sprint 7).
+    /// v2 -> v3: add the `ocr_status` column for OCR outcome visibility (Sprint 13).
     /// CREATE TABLE IF NOT EXISTS does not extend an existing table, so older
     /// databases are upgraded with ALTER TABLE.
     private func migrateIfNeeded() throws {
-        guard !tableInfo("shelf_items").contains("note") else { return }
-        try exec("ALTER TABLE shelf_items ADD COLUMN note TEXT;")
-        try exec("UPDATE schema_meta SET value = '2' WHERE key = 'version';")
+        let columns = tableInfo("shelf_items")
+        if !columns.contains("note") {
+            try exec("ALTER TABLE shelf_items ADD COLUMN note TEXT;")
+        }
+        if !columns.contains("ocr_status") {
+            try exec("ALTER TABLE shelf_items ADD COLUMN ocr_status TEXT;")
+        }
+        try exec("UPDATE schema_meta SET value = '3' WHERE key = 'version';")
     }
 
     /// Column names of a table via PRAGMA table_info.
@@ -152,6 +159,15 @@ public final class SQLiteShelfRepository: ShelfItemRepository, @unchecked Sendab
         }
     }
 
+    /// Sprint 13 / ADR-0013: record the OCR outcome (ok/failed) without text.
+    public func setOCRStatus(id: UUID, status: OCRStatus?) async throws {
+        try inTransaction {
+            try self.exec(
+                "UPDATE shelf_items SET ocr_status = \(sqlNullable(status?.rawValue)) WHERE id = '\(escape(id.uuidString))';"
+            )
+        }
+    }
+
     public func setNote(id: UUID, text: String?) async throws {
         try inTransaction {
             try self.exec(
@@ -181,7 +197,7 @@ public final class SQLiteShelfRepository: ShelfItemRepository, @unchecked Sendab
         guard let fts = Self.ftsQuery(query) else { return [] }
         let stmt = try prepare("""
             SELECT s.id, s.source_url, s.display_name, s.original_name, s.captured_at, s.ingested_at,
-                   s.app_name, s.category, s.status, s.ocr_text, s.note,
+                   s.app_name, s.category, s.status, s.ocr_text, s.ocr_status, s.note,
                    snippet(shelf_items_fts, 1, '', '', '…', 12) AS excerpt
             FROM shelf_items_fts f
             JOIN shelf_items s ON s.id = f.item_id
@@ -192,7 +208,7 @@ public final class SQLiteShelfRepository: ShelfItemRepository, @unchecked Sendab
         stmt.bind(2, Int64(max(0, limit)))
         var results: [SearchResult] = []
         while try stmt.step() {
-            results.append(SearchResult(item: decode(stmt), excerpt: stmt.text(11) ?? ""))
+            results.append(SearchResult(item: decode(stmt), excerpt: stmt.text(12) ?? ""))
         }
         return results
     }
@@ -200,14 +216,14 @@ public final class SQLiteShelfRepository: ShelfItemRepository, @unchecked Sendab
     // MARK: - Internals
 
     private var columns: String {
-        "id, source_url, display_name, original_name, captured_at, ingested_at, app_name, category, status, ocr_text, note"
+        "id, source_url, display_name, original_name, captured_at, ingested_at, app_name, category, status, ocr_text, ocr_status, note"
     }
 
     private func upsertRow(_ item: ShelfItem) throws {
         let stmt = try prepare("""
             INSERT OR REPLACE INTO shelf_items
-            (id, source_url, display_name, original_name, captured_at, ingested_at, app_name, category, status, ocr_text, note)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?);
+            (id, source_url, display_name, original_name, captured_at, ingested_at, app_name, category, status, ocr_text, ocr_status, note)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?);
             """)
         stmt.bind(1, item.id.uuidString)
         stmt.bind(2, item.sourceURL.absoluteString)
@@ -219,7 +235,8 @@ public final class SQLiteShelfRepository: ShelfItemRepository, @unchecked Sendab
         stmt.bind(8, item.category?.rawValue)
         stmt.bind(9, item.status.rawValue)
         stmt.bind(10, item.ocrText)
-        stmt.bind(11, item.note)
+        stmt.bind(11, item.ocrStatus?.rawValue)
+        stmt.bind(12, item.note)
         _ = try stmt.step()
         try reindexFTS(item)
     }
@@ -281,7 +298,8 @@ public final class SQLiteShelfRepository: ShelfItemRepository, @unchecked Sendab
             category: stmt.text(7).flatMap { ItemCategory(rawValue: $0) },
             status: ShelfItemStatus(rawValue: stmt.text(8) ?? "") ?? .resting,
             ocrText: stmt.text(9),
-            note: stmt.text(10)
+            ocrStatus: stmt.text(10).flatMap { OCRStatus(rawValue: $0) },
+            note: stmt.text(11)
         )
     }
 

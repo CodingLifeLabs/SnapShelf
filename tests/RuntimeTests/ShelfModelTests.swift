@@ -32,6 +32,7 @@ final class ShelfModelTests: XCTestCase {
             try await search(query, limit: limit)
                 .map { SearchResult(item: $0, excerpt: $0.ocrText ?? $0.displayName) }
         }
+        func setOCRStatus(id: UUID, status: OCRStatus?) async throws { }
         func setOCR(id: UUID, text: String?) async throws {
             if var item = storage[id] { item.ocrText = text; storage[id] = item }
         }

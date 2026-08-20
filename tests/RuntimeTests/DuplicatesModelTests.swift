@@ -16,6 +16,7 @@ final class DuplicatesModelTests: XCTestCase {
         func recent(_ limit: Int) async throws -> [ShelfItem] { Array(storage.values.prefix(limit)) }
         func search(_ query: String, limit: Int) async throws -> [ShelfItem] { [] }
         func searchExcerpts(_ query: String, limit: Int) async throws -> [SearchResult] { [] }
+        func setOCRStatus(id: UUID, status: OCRStatus?) async throws { }
         func setOCR(id: UUID, text: String?) async throws {}
         func setNote(id: UUID, text: String?) async throws {}
         func find(_ id: UUID) async throws -> ShelfItem? { storage[id] }

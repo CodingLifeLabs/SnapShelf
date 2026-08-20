@@ -95,6 +95,11 @@ final class SnapShelfAppDelegate: NSObject, NSApplicationDelegate {
                 await model.startWatchers(extraFolders: settingsModel.settings.watchedFolders)
             }
         }
+        // Settings edits update shelf behavior live (Sprint 13 / ADR-0013).
+        settingsModel.onShelfSettingsChanged = { [weak model, weak settingsModel] in
+            guard let model, let settingsModel else { return }
+            model.applyShelfSettings(settingsModel.settings.shelfSettings)
+        }
 
         statusBarController = StatusBarController(
             onOpenShelf: { [weak panel, weak statusBarController] in

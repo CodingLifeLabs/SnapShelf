@@ -65,3 +65,26 @@ Sprint 12 EVAL에서 발견한 결함 2건을 수정한다 (ADR-0013).
 
 ## ADR
 `docs/design/adr-0013-intake-stability-and-settings-propagation.md`
+
+## GENERATOR 자가 검증 결과
+실행 일시: 2026-08-20 23:08 KST
+
+| Gate | 항목 | 결과 | 비고 |
+|------|------|------|------|
+| 1 | 레이어 의존성 (`harness:lint`) | ✅ PASS | 위반 0건 (파일 59개) |
+| 2 | 빌드 (`xcodebuild build`) | ✅ PASS | 오류 0건 |
+| 3 | SwiftLint (`--strict`) | ✅ PASS | violation 0건 (95 파일) |
+| 4 | 테스트 + 커버리지 | ✅ PASS | 224 tests 전부 통과 (기존 213 + 신규 11). 커버리지: Config 89.47% / Repo 89.98% / Runtime 87.29% / Service 86.54% / Types 98.39% |
+| 5 | `gen:project` + 재빌드 | ✅ PASS | 프로젝트 동기화 후 BUILD SUCCEEDED |
+
+### 구현 중 발견·수정된 추가 결함
+
+**프로덕션 버그 — settle 크기 프로브의 캐시된 stat**:
+`URL.resourceValues(forKeys: [.fileSizeKey])`는 URL 객체에 캐시된 크기를 반환한다.
+settle 프로브가 이 API를 쓰면 첫 프로브에서 캐시된 동일 값과 비교해 "안정"으로 오판정할 수 있었다.
+`FileManager.attributesOfItem(atPath:)`(fresh stat)로 교체했다. 테스트가 이 버그를 잡았다
+(주입된 sleep이 파일을 성장시켜도 프로브 크기가 계속 같게 관측됨).
+
+**테스트 안정화 — settle 대기 테스트 재작성**:
+외부 writer Task와 프로브 간 실시간 레이스로 플래키했다. sleep 클로저 자체가 파일을
+성장시키는 구조로 재작성해 결정론적으로 만들었다 (probed 4/4회, 크기 단조 증가 검증).

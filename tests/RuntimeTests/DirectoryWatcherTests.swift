@@ -36,6 +36,25 @@ final class DirectoryWatcherTests: XCTestCase {
         XCTAssertEqual(Set(added), ["PHOTO.JPG", "x.png"])
     }
 
+    // MARK: - Sprint 13 / ADR-0013: dotfile temp captures
+
+    func test_newFiles_ignoresDotPrefixedTempFiles() async throws {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("snapshelf-watch-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let watcher = DirectoryWatcher(directory: dir, fileExtensions: ["png"]) { _ in }
+
+        // macOS screencapture writes ".Name.png" first, renames when complete.
+        let tempOnly = await watcher.newFiles(from: [".Screenshot 2026-08-20 at 10.00.00.png"])
+        XCTAssertTrue(tempOnly.isEmpty, "dot-prefixed temp files must not be ingested")
+
+        let renamed = await watcher.newFiles(from: ["Screenshot 2026-08-20 at 10.00.00.png"])
+        XCTAssertEqual(Set(renamed), ["Screenshot 2026-08-20 at 10.00.00.png"],
+                       "the renamed final file must be ingested")
+    }
+
     // MARK: - Live dispatch source (integration)
 
     func test_start_detectsFileAddedAfterStart() async throws {

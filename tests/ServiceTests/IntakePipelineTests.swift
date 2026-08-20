@@ -43,6 +43,45 @@ final class IntakeSupportTests: XCTestCase {
         let date = IntakeSupport.creationDate(of: url)
         XCTAssertNotNil(date)
     }
+
+    // MARK: - settle policy (Sprint 13 / ADR-0013)
+
+    func test_isStable_requiresTwoSamples() {
+        XCTAssertFalse(IntakeSupport.isStable(sampling: []))
+        XCTAssertFalse(IntakeSupport.isStable(sampling: [100]))
+    }
+
+    func test_isStable_trueWhenLastTwoSamplesAgree() {
+        XCTAssertTrue(IntakeSupport.isStable(sampling: [0, 100, 100]))
+        XCTAssertTrue(IntakeSupport.isStable(sampling: [100, 100]))
+    }
+
+    func test_isStable_falseWhileFileStillGrowing() {
+        XCTAssertFalse(IntakeSupport.isStable(sampling: [0, 100, 300, 700]))
+        XCTAssertFalse(IntakeSupport.isStable(sampling: [100, 300]))
+    }
+}
+
+/// Sprint 13 / ADR-0013: OCR service that always fails, to exercise the
+/// failure-visibility path (row persisted + ocrStatus = .failed).
+private struct FailingOCR: OCRService {
+    struct RecognizeError: Error {}
+    func recognize(_ url: URL) async throws -> String { throw RecognizeError() }
+}
+
+/// Records the file sizes observed between settle probes.
+private actor SizeProbes {
+    private var sizes: [Int] = []
+    func record(_ size: Int) { sizes.append(size) }
+    func all() -> [Int] { sizes }
+}
+
+private extension DefaultIntakePipelineTests {
+    /// Fresh `stat` (resourceValues caches and would mask growth).
+    static func freshSize(of url: URL) -> Int {
+        let attributes = try? FileManager.default.attributesOfItem(atPath: url.path)
+        return (attributes?[.size] as? Int) ?? 0
+    }
 }
 
 final class DefaultIntakePipelineTests: XCTestCase {
@@ -71,6 +110,7 @@ final class DefaultIntakePipelineTests: XCTestCase {
             try await search(query, limit: limit)
                 .map { SearchResult(item: $0, excerpt: $0.ocrText ?? $0.displayName) }
         }
+        func setOCRStatus(id: UUID, status: OCRStatus?) async throws { }
         func setOCR(id: UUID, text: String?) async throws {
             if var item = storage[id] { item.ocrText = text; storage[id] = item }
         }
@@ -190,5 +230,89 @@ final class DefaultIntakePipelineTests: XCTestCase {
         // Assert: OCR text was indexed and is searchable
         let results = try await repo.searchExcerpts("Supabase", limit: 10)
         XCTAssertEqual(results.count, 1)
+    }
+
+    // MARK: - OCR failure visibility (Sprint 13 / ADR-0013)
+
+    func test_ingest_ocrFailure_stillPersistsItemAndMarksFailed() async throws {
+        // Arrange
+        let repo = FakeRepository()
+        let pipeline = DefaultIntakePipeline(
+            repository: repo,
+            ocrService: FailingOCR(),
+            clock: { Date(timeIntervalSince1970: 1) },
+            settleAttempts: 2,
+            settleIntervalNanos: 1
+        )
+
+        // Act
+        let item = try await pipeline.ingest(url: URL(fileURLWithPath: "/tmp/broken.png"))
+        let stored = await repo.snapshot()
+
+        // Assert: the capture is never lost, and the failure is visible.
+        XCTAssertEqual(stored.count, 1)
+        XCTAssertEqual(item.ocrStatus, .failed)
+        XCTAssertNil(item.ocrText)
+        XCTAssertEqual(stored.first?.ocrStatus, .failed)
+    }
+
+    func test_ingest_ocrSuccess_marksOk() async throws {
+        // Arrange
+        let repo = FakeRepository()
+        let pipeline = DefaultIntakePipeline(
+            repository: repo,
+            ocrService: FakeOCR("recognized text"),
+            clock: { Date(timeIntervalSince1970: 1) },
+            settleAttempts: 2,
+            settleIntervalNanos: 1
+        )
+
+        // Act
+        let item = try await pipeline.ingest(url: URL(fileURLWithPath: "/tmp/shot.png"))
+
+        // Assert
+        XCTAssertEqual(item.ocrStatus, .ok)
+        XCTAssertEqual(item.ocrText, "recognized text")
+    }
+
+    func test_ingest_waitsForFileToSettleBeforeOCR() async throws {
+        // Arrange: the injected sleep doubles as the "writer" — it appends to
+        // the file on every probe, so the size strictly increases between
+        // samples and the file can never look settled early (deterministic,
+        // no real-time race with an external writer task).
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("snapshelf-settle-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let url = dir.appendingPathComponent("growing.png")
+        try Data(repeating: 0, count: 10).write(to: url)
+
+        let probes = SizeProbes()
+        let growingSleep: @Sendable (UInt64) async -> Void = { interval in
+            try? await Task.sleep(nanoseconds: interval)
+            if let handle = try? FileHandle(forWritingTo: url) {
+                defer { try? handle.close() }
+                _ = try? handle.seekToEnd()
+                try? handle.write(contentsOf: Data(repeating: 1, count: 10))
+            }
+            await probes.record(Self.freshSize(of: url))
+        }
+
+        let repo = FakeRepository()
+        let pipeline = DefaultIntakePipeline(
+            repository: repo,
+            clock: { Date(timeIntervalSince1970: 1) },
+            settleAttempts: 5,
+            settleIntervalNanos: 1,
+            sleep: growingSleep
+        )
+
+        // Act: ingest must still complete once attempts are exhausted.
+        _ = try await pipeline.ingest(url: url)
+
+        // Assert: settle kept probing while the file kept changing.
+        let sampled = await probes.all()
+        XCTAssertEqual(sampled.count, 4, "a still-growing file is probed on every attempt")
+        XCTAssertEqual(sampled, Array(sampled.sorted()), "size strictly increases across probes")
     }
 }

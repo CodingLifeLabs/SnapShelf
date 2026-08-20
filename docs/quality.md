@@ -4,13 +4,13 @@
 
 ## 현재 등급
 
-- **상태**: 🟢 Sprint 12 EVAL PASS (로컬 사용 통계, ADR-0012) — 12 스프린트 전부 완주
-- **커버리지**: Config 86.0 · Repo 92.3 · Runtime 87.0 · Service 86.0 · Types 98.4 (전 ≥80% ✅)
+- **상태**: 🟡 Sprint 13 GENERATOR 완료 (설정 전파 + 인테이크 안정화, ADR-0013) — EVALUATOR 대기
+- **커버리지**: Config 89.47 · Repo 89.98 · Runtime 87.29 · Service 86.54 · Types 98.39 (전 ≥80% ✅)
 - **레이어 위반**: 0건 (Gate 1)
 - **빌드**: 성공 — Debug (gen:project 후 신규 파일 반영 확인)
-- **테스트**: 213/213 통과 (기존 194 + Sprint 12 신규 19)
+- **테스트**: 224/224 통과 (기존 213 + Sprint 13 신규 11)
 - **배포**: GitHub Release v0.1.1 (SnapShelf-0.1.1.dmg 2.2MB + SHA-256) · Pages 랜딩(상대경로 수정+enhance.js 재작성 반영)
-- **비고**: v0.1.1 출시 완료 (2026-08-18). Sprint 12 EVAL PASS (2026-08-20, `sprint-12-eval.md`) — 로컬 전용 통계, 배포 불필요. 스프린트 외 발견: Settings→ShelfModel 설정 미전달(auto-stow) 결함, 인앱 OCR 무실패 원인 조사 필요
+- **비고**: Sprint 13은 Sprint 12 EVAL에서 발견한 결함 2건(설정 미전달, OCR 무실패) 수정. 구현 중 추가로 settle 프로브의 캐시된 stat 버그 발견·수정 (`URL.resourceValues` → fresh `FileManager.attributesOfItem`)
 
 ## 5개 게이트 (네이티브 Swift 적응)
 
@@ -30,8 +30,8 @@
 - ~~(Sprint 4) Foundation Models 가용성 게이트~~ → macOS 26 `#available` 게이트 구현. 본 기기 Intel/macOS 15 → 클라우드/Ollama fallback 기본 (ADR-0006)
 - ~~(Sprint 9) 랜딩 페이지~~ → `web/` + Pages 배포 완료
 - (보류) ADR-0009 임베딩 벡터 검색 — v2 검토
-- (Sprint 12 EVAL 발견) Settings의 shelf 설정(auto-stow/hoverSeconds)이 ShelfModel에 미전달 — 설정 변경이 실동작에 반영 안 됨. 수정 스프린트 후보
-- (Sprint 12 EVAL 발견) 인앱 OCR `try?` 무실패 — 직접 Vision 호출은 동일 파일 인식 성공. 원인 조사(타이밍/파일 이동 race 의심) 필요
+- ~~(Sprint 12 EVAL 발견) Settings의 shelf 설정(auto-stow/hoverSeconds)이 ShelfModel에 미전달~~ → Sprint 13 수정: `onShelfSettingsChanged` 콜백 + `applyShelfSettings` 재스케줄
+- ~~(Sprint 12 EVAL 발견) 인앱 OCR `try?` 무실패~~ → Sprint 13 수정: dotfile 임시파일 무시 + settle 대기 + `ocrStatus` 가시화. EVALUATOR 검증 대기
 - (게이트 대기) Apple 공증 — Developer ID 인증서 확보 시 ADR-0010 4단계 절차 (사용자 확인 필수)
 - ~~(대화형 환경) Shelf 패널·애니메이션 체감 확인~~ → 2026-08-18 대화형 EVAL 완료: `docs/sprints/interactive-eval-2026-08-18.md` — 조건부 PASS. **P0-2 실제 스크린샷 폴더(Desktop 등) 미감시가 CRITICAL로 확인됨**(⌘⇧4 캡처가 앱에 반영 안 됨) + enhance.js DMG 재작성 데드코드 + 패널 배치(포커스 스크린·4px 클리핑). v0.1.1 최우선 후보.
 - (대기) XCUITest 도입 여부 — 이번 EVAL은 osascript+screencapture로 대체 수행

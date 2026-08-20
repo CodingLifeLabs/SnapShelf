@@ -36,6 +36,10 @@ public struct ShelfItem: Identifiable, Sendable, Codable, Equatable {
     public var category: ItemCategory?
     public var status: ShelfItemStatus
     public var ocrText: String?
+    /// Sprint 13 / ADR-0013: OCR outcome marker. nil = not yet processed
+    /// (also the value for all pre-Sprint-13 rows), .ok = text extracted,
+    /// .failed = recognition attempted but failed (visible, not silent).
+    public var ocrStatus: OCRStatus?
     public var note: String?
 
     public init(
@@ -49,6 +53,7 @@ public struct ShelfItem: Identifiable, Sendable, Codable, Equatable {
         category: ItemCategory? = nil,
         status: ShelfItemStatus = .resting,
         ocrText: String? = nil,
+        ocrStatus: OCRStatus? = nil,
         note: String? = nil
     ) {
         self.id = id
@@ -61,8 +66,15 @@ public struct ShelfItem: Identifiable, Sendable, Codable, Equatable {
         self.category = category
         self.status = status
         self.ocrText = ocrText
+        self.ocrStatus = ocrStatus
         self.note = note
     }
+}
+
+/// Outcome of the OCR pass over a captured item (Sprint 13 / ADR-0013).
+public enum OCRStatus: String, Sendable, Codable, Equatable {
+    case ok
+    case failed
 }
 
 public extension ShelfItem {
