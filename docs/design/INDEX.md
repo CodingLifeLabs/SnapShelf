@@ -23,6 +23,7 @@
 
 | ADR | 제목 | 상태 | 검토 시점 | 결정 기준 |
 |-----|------|------|-----------|-----------|
+| ADR-0013 | 설정 전파 + 인테이크 안정화 | Proposed | Sprint 13 | S12 EVAL 발견 결함 2건: onShelfSettingsChanged 콜백 주입 + dotfile 무시/settle/OCR 가시화 3계층 방어. `adr-0013-intake-stability-and-settings-propagation.md` |
 | ADR-0009 | 임베딩 기반 벡터 검색 도입 | Proposed | v2 | FTS5+LLM 재랭킹(v1) 대비 품질/비용. sqlite-vec 또는 로컬 ONNX. |
 
 ## Superseded
