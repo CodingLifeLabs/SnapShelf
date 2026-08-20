@@ -89,3 +89,13 @@ PMF 검증 지표를 텔레메트리 없이 로컬에서만 수집·표시한다
 - `App/Sources/Settings/SettingsView.swift` — Privacy 탭 "Your usage (local only)" 섹션
 - `App/Sources/SnapShelfApp.swift` — UsageStatsLog 생성·주입
 - Tests 3파일 신규 (4+7+8=19개) + 기존 AppPaths 테스트 3곳 시그니처 갱신
+
+## EVALUATOR 결과 (2026-08-20)
+
+**PASS** — 전 검증 항목 통과. 상세: `sprint-12-eval.md`
+
+- Privacy 탭 섹션/지표/고지/Reset 렌더링 확인 (창 캡처)
+- 라이브 플로우: 캡처→`captured`, 검색→`searched`/`searchHit`(FTS 명중 시) 기록 확인
+- UI 수치 ↔ jsonl 실집계 완전 일치 (15/23/4%/2일)
+- Reset → 파일 삭제 + UI 0 초기화 + 이후 이벤트 재기록(파일 재생성) 확인
+- 스프린트 외 발견 2건 기록: Settings→ShelfModel 설정 미전달, 인앱 OCR 무실패 (quality.md 기술부채)

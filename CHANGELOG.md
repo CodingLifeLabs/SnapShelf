@@ -5,6 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Dates are Asia/S
 
 ## [Unreleased]
 
+### Added — Sprint 12: local-only usage stats (ADR-0012)
+- UsageEventKind (captured/searched/searchHit/copied/pinned/stowed) + UsageEvent (Types)
+- UsageStatsLog actor: JSON-lines file, maxEvents 2000 cap, record/events/clear (Runtime)
+- UsageStatsSummary pure aggregation: totals, searchHitRate, activeDays, eventsLast(days:) (Service)
+- ShelfModel hooks: ingest/togglePin/stow/runSearch record events via injected log (nil = disabled)
+- Settings → Privacy: "Your usage (local only)" — Captured/Searches/Search hit rate/Copied/
+  Active days + "This never leaves your Mac" notice + Reset Usage Stats
+- 19 new unit tests; 213/213 pass. Coverage: Config 86.0 · Repo 92.3 · Runtime 87.0 · Service 86.0 · Types 98.4
+- EVAL PASS (2026-08-20): live capture/search events verified end-to-end, UI↔jsonl counts match,
+  Reset zeroes and recreates the file. Report: docs/sprints/sprint-12-eval.md
+
 ## [0.1.1] — 2026-08-18
 
 ### Added — Sprint 11: real screenshot folder watching (ADR-0011)
