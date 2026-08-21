@@ -5,6 +5,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Dates are Asia/S
 
 ## [Unreleased]
 
+## [0.1.2] — 2026-08-21
+
 ### Fixed — Sprint 13: settings propagation + intake stability (ADR-0013)
 - Settings → ShelfModel live propagation: `onShelfSettingsChanged` callback +
   `ShelfModel.applyShelfSettings` — reschedules resting items on hover-window change,
