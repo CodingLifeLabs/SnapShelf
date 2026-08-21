@@ -4,13 +4,13 @@
 
 ## 현재 등급
 
-- **상태**: 🟡 Sprint 13 GENERATOR 완료 (설정 전파 + 인테이크 안정화, ADR-0013) — EVALUATOR 대기
+- **상태**: 🟢 Sprint 13 EVAL PASS (설정 전파 + 인테이크 안정화, ADR-0013) — 13 스프린트 전부 완주
 - **커버리지**: Config 89.47 · Repo 89.98 · Runtime 87.29 · Service 86.54 · Types 98.39 (전 ≥80% ✅)
 - **레이어 위반**: 0건 (Gate 1)
 - **빌드**: 성공 — Debug (gen:project 후 신규 파일 반영 확인)
 - **테스트**: 224/224 통과 (기존 213 + Sprint 13 신규 11)
 - **배포**: GitHub Release v0.1.1 (SnapShelf-0.1.1.dmg 2.2MB + SHA-256) · Pages 랜딩(상대경로 수정+enhance.js 재작성 반영)
-- **비고**: Sprint 13은 Sprint 12 EVAL에서 발견한 결함 2건(설정 미전달, OCR 무실패) 수정. 구현 중 추가로 settle 프로브의 캐시된 stat 버그 발견·수정 (`URL.resourceValues` → fresh `FileManager.attributesOfItem`)
+- **비고**: Sprint 13 EVAL PASS (2026-08-21, `sprint-13-eval.md`) — S12 결함 2건(설정 미전달, OCR 무실패) 실사용 시나리오 수정 확인. 스키마 v3 마이그레이션 무손실. v0.1.2 배포 후보
 
 ## 5개 게이트 (네이티브 Swift 적응)
 

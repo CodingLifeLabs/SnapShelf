@@ -5,6 +5,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Dates are Asia/S
 
 ## [Unreleased]
 
+### Fixed — Sprint 13: settings propagation + intake stability (ADR-0013)
+- Settings → ShelfModel live propagation: `onShelfSettingsChanged` callback +
+  `ShelfModel.applyShelfSettings` — reschedules resting items on hover-window change,
+  cancels all pending stows when auto-stow is turned off (S12 EVAL defect #1)
+- Intake race fixes (S12 EVAL defect #2): DirectoryWatcher skips dot-prefixed temp files
+  (macOS `screencapture` writes `.Name.png` first); IntakePipeline waits for the file size
+  to settle before OCR (two consecutive equal samples via fresh `FileManager` stat —
+  `URL.resourceValues` caches and would settle early)
+- OCR failure visibility: failures recorded as `ocrStatus=.failed` instead of being
+  swallowed (`try?`); the captured row is always persisted
+- ShelfItem.ocrStatus (ok/failed, Codable default nil) + SQLite schema v3
+  (`ocr_status` column, lossless migration from v2/v1)
+- 11 new unit tests; 224/224 pass. Coverage: Config 89.47 · Repo 89.98 · Runtime 87.29 ·
+  Service 86.54 · Types 98.39
+- EVAL PASS (2026-08-21): live toggle/hoverSeconds propagation, single-row ingest with
+  OCR text, corrupted PNG → row + failed status. Report: docs/sprints/sprint-13-eval.md
+
 ### Added — Sprint 12: local-only usage stats (ADR-0012)
 - UsageEventKind (captured/searched/searchHit/copied/pinned/stowed) + UsageEvent (Types)
 - UsageStatsLog actor: JSON-lines file, maxEvents 2000 cap, record/events/clear (Runtime)
