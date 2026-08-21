@@ -1,6 +1,6 @@
 # ADR-0013: 설정 전파 + 인테이크 안정화 (Sprint 13)
 
-- 상태: Proposed (Sprint 13에서 확정)
+- 상태: Accepted (Sprint 13 구현·EVAL PASS 2026-08-21)
 - 일자: 2026-08-20
 - 맥락: Sprint 12 EVAL(`sprint-12-eval.md`)에서 발견된 결함 2건의 근본 해결
 

@@ -18,12 +18,12 @@
 | ADR-0010 | 공증/배포 파이프라인 | Accepted | Release=ad-hoc+Hardened Runtime, DMG+체크섬 자동. 공증 제출은 사용자 확인 게이트. `adr-0010-notarization-deploy.md` |
 | ADR-0011 | 실제 스크린샷 폴더 감시 | Accepted | 다중 폴더 DirectoryWatcher(시스템 설정→Desktop→Pictures/Screenshots→Inbox+사용자). 비샌드박스라 TCC 프롬프트만으로 접근. `adr-0011-real-folder-watch.md` |
 | ADR-0012 | 로컬 사용 통계 — 텔레메트리 없는 PMF 지표 | Accepted | 이벤트(종류+타임스탬프만)를 JSON-lines 로컬 파일에 기록, Privacy 탭 셀프 리포트. 원격 전송 영구 제외. Sprint 12 구현·EVAL PASS(2026-08-20). `adr-0012-local-usage-stats.md` |
+| ADR-0013 | 설정 전파 + 인테이크 안정화 | Accepted | S12 EVAL 결함 2건 근본 해결: onShelfSettingsChanged 콜백 주입 + dotfile 무시/settle/OCR 가시화 3계층 방어. Sprint 13 구현·EVAL PASS(2026-08-21). `adr-0013-intake-stability-and-settings-propagation.md` |
 
 ## Proposed (결정 보류 — 해당 Sprint 에서 확정)
 
 | ADR | 제목 | 상태 | 검토 시점 | 결정 기준 |
 |-----|------|------|-----------|-----------|
-| ADR-0013 | 설정 전파 + 인테이크 안정화 | Proposed | Sprint 13 | S12 EVAL 발견 결함 2건: onShelfSettingsChanged 콜백 주입 + dotfile 무시/settle/OCR 가시화 3계층 방어. `adr-0013-intake-stability-and-settings-propagation.md` |
 | ADR-0009 | 임베딩 기반 벡터 검색 도입 | Proposed | v2 | FTS5+LLM 재랭킹(v1) 대비 품질/비용. sqlite-vec 또는 로컬 ONNX. |
 
 ## Superseded
