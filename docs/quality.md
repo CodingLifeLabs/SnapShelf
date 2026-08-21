@@ -9,8 +9,8 @@
 - **레이어 위반**: 0건 (Gate 1)
 - **빌드**: 성공 — Debug (gen:project 후 신규 파일 반영 확인)
 - **테스트**: 224/224 통과 (기존 213 + Sprint 13 신규 11)
-- **배포**: GitHub Release v0.1.1 (SnapShelf-0.1.1.dmg 2.2MB + SHA-256) · Pages 랜딩(상대경로 수정+enhance.js 재작성 반영)
-- **비고**: Sprint 13 EVAL PASS (2026-08-21, `sprint-13-eval.md`) — S12 결함 2건(설정 미전달, OCR 무실패) 실사용 시나리오 수정 확인. 스키마 v3 마이그레이션 무손실. v0.1.2 배포 후보
+- **배포**: GitHub Release v0.1.2 (SnapShelf-0.1.2.dmg 2.2MB + SHA-256, 2026-08-21) · Pages 랜딩(latest 자동 추적)
+- **비고**: Sprint 13 EVAL PASS (2026-08-21, `sprint-13-eval.md`) — S12 결함 2건(설정 미전달, OCR 무실패) 실사용 시나리오 수정 확인. 스키마 v3 마이그레이션 무손실. v0.1.2 출시 완료
 
 ## 5개 게이트 (네이티브 Swift 적응)
 
